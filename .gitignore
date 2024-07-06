@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+.data/maps/
+
+.x64/
+.EEMapBuilder/
+
+*.dll
