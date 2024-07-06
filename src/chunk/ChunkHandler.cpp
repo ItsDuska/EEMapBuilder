@@ -38,7 +38,7 @@ void chunk::ChunkHandler::update(sf::Vector2f& position)
 void chunk::ChunkHandler::addChunk(sf::Vector2i chunkPosition)
 {
     chunks.emplace_back();
-    ChunkData* data = &chunks.back();
+    ChunkData* data = &chunks.back().rawData;
     data->x = static_cast<int16_t>(chunkPosition.x);
     data->y = static_cast<int16_t>(chunkPosition.y);
     
@@ -138,17 +138,42 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         return;
     }
 
-    // Load the number of chunks
-    size_t chunkCount = 0;
-    inFile.read(reinterpret_cast<char*>(&chunkCount), sizeof(chunkCount));
+    // Load buffer sizes
+    BufferSizes sizes{};
+    inFile.read(reinterpret_cast<char*>(&sizes), sizeof(BufferSizes));
 
     // Load chunks
-    chunks.resize(chunkCount);
-    inFile.read(reinterpret_cast<char*>(chunks.data()), sizeof(ChunkData)*chunkCount);
-    
-    for (int i = 0; i < chunkCount; i++)
+    std::vector<ChunkData> loadedChunks;
+    loadedChunks.resize(sizes.chunks);
+    inFile.read(reinterpret_cast<char*>(loadedChunks.data()), sizeof(ChunkData) * sizes.chunks);
+
+    // Load entities
+    std::vector<EntityTile> loadedEntities;
+    loadedEntities.resize(sizes.entities);
+    inFile.read(reinterpret_cast<char*>(loadedEntities.data()), sizeof(EntityTile) * sizes.entities);
+
+    if (chunks.capacity() < sizes.chunks)
     {
-        chunkMap[combineCoords(chunks[i].x, chunks[i].y)] = i;
+        chunks.resize(sizes.chunks);
+    }
+
+    // Reconstruct chunks and entities
+    for (size_t i = 0; i < sizes.chunks; ++i)
+    {
+        ChunkData& chunk = loadedChunks[i];
+        EditorSideChunkData editorChunk;
+        editorChunk.rawData = chunk;
+
+        // Find entities for this chunk
+        for (size_t j = chunk.entityBuffer.offset; j < chunk.entityBuffer.offset + chunk.entityBuffer.count; ++j)
+        {
+            std::cout << j << "\n";
+            editorChunk.entities.push_back(loadedEntities[j]);
+        }
+
+        // Store the chunk
+        chunkMap[combineCoords(chunk.x, chunk.y)] = i;
+        chunks.push_back(editorChunk);
     }
 
     inFile.close();
@@ -169,21 +194,37 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
         return;
     }
 
-    size_t chunkCount = 0;
-    outFile.seekp(sizeof(chunkCount)); // 4 byte offset...
+    BufferSizes sizes{};
+    outFile.seekp(sizeof(BufferSizes)); // 16 byte offset...
 
     for (const auto& entry : chunkMap)
     {
-        const ChunkData& chunk = chunks[entry.second];
-        if (!isChunkEmpty(chunk.tilemap, TILE_MAP_SIZE))
+        EditorSideChunkData& chunk = chunks[entry.second];
+        sizes.entities += chunk.entities.size();
+        chunk.rawData.entityBuffer.offset = sizes.entities;
+        chunk.rawData.entityBuffer.count = chunk.entities.size(); 
+    }
+
+    std::vector<EntityTile> allEntities;
+    allEntities.reserve(sizes.entities); // Varaa muisti kaikille entiteille kerralla
+
+    for (const auto& entry : chunkMap)
+    {
+        const EditorSideChunkData& chunk = chunks[entry.second];
+        if (!isChunkEmpty(chunk.rawData.tilemap, TILE_MAP_SIZE))
         {
-            outFile.write(reinterpret_cast<const char*>(&chunk), sizeof(ChunkData));
-            chunkCount++;
+            outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
+            sizes.chunks++;
+            // Lis‰‰ entityt allEntities-vektoriin
+            allEntities.insert(allEntities.end(), chunk.entities.begin(), chunk.entities.end());
         }
     }
 
+    outFile.write(reinterpret_cast<const char*>(allEntities.data()), sizeof(EntityTile) * sizes.entities);
+
+    // P‰ivit‰ BufferSizes
     outFile.seekp(0);
-    outFile.write(reinterpret_cast<const char*>(&chunkCount), sizeof(chunkCount));
+    outFile.write(reinterpret_cast<const char*>(&sizes), sizeof(BufferSizes));
     outFile.close();
 }
 
@@ -199,7 +240,7 @@ ChunkData* chunk::ChunkHandler::getChunkData(int16_t x, int16_t y)
 
     if (it != chunkMap.end())
     {
-        return &chunks[it->second];
+        return &chunks[it->second].rawData;
     }
 
     return nullptr;

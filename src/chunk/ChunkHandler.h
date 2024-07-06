@@ -9,6 +9,24 @@ namespace chunk
 
 	constexpr int MAX_BUFFER_COUNT = 9;
 
+
+	struct EditorSideChunkData
+	{
+		ChunkData rawData;
+		std::vector<EntityTile> entities;
+		EditorSideChunkData()
+			:rawData(), entities(10)
+		{
+		}
+	};
+
+	struct BufferSizes
+	{
+		size_t chunks;
+		size_t entities;
+	};
+
+
 	void addQuadVertices(sf::Vertex* quad, const sf::Vector2i& position, const sf::Vector2i& texCoord, sf::Vector2f& tileSize,
 		sf::Vector2f& textureSize,bool isSolid);
 
@@ -17,6 +35,7 @@ namespace chunk
 	void clearBit(uint32_t& number, int n);
 
 	bool isChunkEmpty(const uint16_t* data, size_t size);
+
 
 	class ChunkHandler
 	{
@@ -44,14 +63,13 @@ namespace chunk
 
 		uint16_t getChunkBufferIndex(sf::Vector2i& position);
 		
-
 		bool chunkInMemory(sf::Vector2i& position);
 		int chunkInActiveMemory(const sf::Vector2i& position);
 
 		void addVertexBuffer(sf::Vector2i& position, bool hasTileMap);
 
 	private:
-		std::vector<ChunkData> chunks;
+		std::vector<EditorSideChunkData> chunks;
 		std::vector<sf::VertexBuffer> vertexBuffers;
 		std::unordered_map<ChunkKey, uint16_t> chunkMap;
 		std::vector<sf::Vector2i> activeChunks;
