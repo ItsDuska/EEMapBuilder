@@ -5,6 +5,9 @@
 #include <string>
 
 #include "chunk/ChunkHandler.h"
+#include "editor/gui/BlockSelection.h"
+
+
 /*
 * Mahdollinen file format:
 * Tiedoston ensimmäiset 4 byteä kertoo staattisen listan koon.
@@ -71,8 +74,13 @@ public:
 	void render(sf::RenderTarget& window);
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex,bool isSolid);
+	void addEntity(); //TODO:
+	void deleteEntity(); //TODO:
+
 private:
 	chunk::ChunkHandler handler;
+
+
 
 	sf::Vector2f windowSize;
 	sf::RenderStates states;

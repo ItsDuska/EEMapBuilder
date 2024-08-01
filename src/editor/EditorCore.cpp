@@ -12,7 +12,7 @@
 
 
 EditorCore::EditorCore(sf::Vector2f& windowSize)
-    :cells( 32,32 ), tileSize( windowSize.x / cells.x, windowSize.y / cells.y), engine(windowSize,tileSize)
+    :cells( 12,12 ), tileSize( windowSize.y / cells.x, windowSize.y / cells.y), engine(windowSize,tileSize)
 {
     info.guiIndex = 1;
     currentTab = 0;
@@ -124,6 +124,8 @@ void EditorCore::events(sf::Event& sfEvent)
             info.showSolidBlocks = !info.showSolidBlocks;
             std::cout << "SHOWING MODE: " << info.showSolidBlocks << "\n";
             break;
+        case sf::Keyboard::E:
+            break;
         default:
             break;
         }
@@ -145,21 +147,24 @@ void EditorCore::createLines(sf::Vector2f& windowSize)
 {
     std::vector<sf::Vertex> vertices;
 
+
+    const float realWidth = windowSize.x / cells.x;
+
     for (int i = 0; i <= cells.x; ++i) {
         if (i * tileSize.x >= windowSize.x)
         {
             break;
         }
-        vertices.emplace_back(sf::Vector2f(0, i * tileSize.y), sf::Color::Cyan);
-        vertices.emplace_back(sf::Vector2f(cells.x * tileSize.x, i * tileSize.y), sf::Color::Cyan);
+        vertices.emplace_back(sf::Vector2f(0, i * tileSize.y), sf::Color::Red);
+        vertices.emplace_back(sf::Vector2f(cells.x * realWidth, i * tileSize.y), sf::Color::Green);
     }
 
-    for (int i = 0; i <= cells.y; ++i) {
-        if (i * tileSize.y >= windowSize.y)
+    for (int i = 0; i <= cells.y*2; ++i) {
+        if (i * tileSize.x >= windowSize.x)
         {
             break;
         }
-        vertices.emplace_back(sf::Vector2f(i * tileSize.x, 0), sf::Color::Cyan);
+        vertices.emplace_back(sf::Vector2f(i * tileSize.x, 0), sf::Color::Magenta);
         vertices.emplace_back(sf::Vector2f(i * tileSize.x, cells.y * tileSize.x), sf::Color::Cyan);
     }
 

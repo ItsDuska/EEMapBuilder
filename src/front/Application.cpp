@@ -4,10 +4,11 @@
 
 Application::Application()
 {
-	//sf::VideoMode currentMode = sf::VideoMode::getDesktopMode();
-	//window = std::make_unique<sf::RenderWindow>(currentMode, "Elysian Enclave", sf::Style::Default);
-	window = std::make_unique<sf::RenderWindow>(sf::VideoMode(800,700), "Elysian Enclave", sf::Style::Default);
-	window->setFramerateLimit(0u);
+	sf::VideoMode currentMode = sf::VideoMode::getDesktopMode();
+	
+	window = std::make_unique<sf::RenderWindow>(currentMode, "Elysian Enclave", sf::Style::Default);
+	//window = std::make_unique<sf::RenderWindow>(sf::VideoMode(800,700), "Elysian Enclave", sf::Style::Default);
+	window->setFramerateLimit(60u);
 
 	sf::Vector2u uWindowSize = window->getSize();
 	sf::Vector2f windowSize(static_cast<float>(uWindowSize.x), static_cast<float>(uWindowSize.y));

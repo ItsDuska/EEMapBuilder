@@ -138,16 +138,13 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         return;
     }
 
-    // Load buffer sizes
     BufferSizes sizes{};
     inFile.read(reinterpret_cast<char*>(&sizes), sizeof(BufferSizes));
 
-    // Load chunks
     std::vector<ChunkData> loadedChunks;
     loadedChunks.resize(sizes.chunks);
     inFile.read(reinterpret_cast<char*>(loadedChunks.data()), sizeof(ChunkData) * sizes.chunks);
 
-    // Load entities
     std::vector<EntityTile> loadedEntities;
     loadedEntities.resize(sizes.entities);
     inFile.read(reinterpret_cast<char*>(loadedEntities.data()), sizeof(EntityTile) * sizes.entities);
@@ -164,14 +161,11 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         EditorSideChunkData editorChunk;
         editorChunk.rawData = chunk;
 
-        // Find entities for this chunk
         for (size_t j = chunk.entityBuffer.offset; j < chunk.entityBuffer.offset + chunk.entityBuffer.count; ++j)
         {
-            std::cout << j << "\n";
             editorChunk.entities.push_back(loadedEntities[j]);
         }
 
-        // Store the chunk
         chunkMap[combineCoords(chunk.x, chunk.y)] = i;
         chunks.push_back(editorChunk);
     }
@@ -206,7 +200,7 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
     }
 
     std::vector<EntityTile> allEntities;
-    allEntities.reserve(sizes.entities); // Varaa muisti kaikille entiteille kerralla
+    allEntities.reserve(sizes.entities);
 
     for (const auto& entry : chunkMap)
     {
@@ -215,14 +209,13 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
         {
             outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
             sizes.chunks++;
-            // Lis‰‰ entityt allEntities-vektoriin
+            
             allEntities.insert(allEntities.end(), chunk.entities.begin(), chunk.entities.end());
         }
     }
 
     outFile.write(reinterpret_cast<const char*>(allEntities.data()), sizeof(EntityTile) * sizes.entities);
 
-    // P‰ivit‰ BufferSizes
     outFile.seekp(0);
     outFile.write(reinterpret_cast<const char*>(&sizes), sizeof(BufferSizes));
     outFile.close();

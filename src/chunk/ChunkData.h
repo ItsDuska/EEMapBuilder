@@ -21,8 +21,9 @@ struct ChunkData
 	BufferView entityBuffer;
 };
 
-struct EntityTile {
-	sf::Vector2<uint8_t> tilePosition;
+struct EntityTile
+{
+	sf::Vector2<uint8_t> position;
 	uint16_t type; // Esimerkkin‰ ovi, joka vie toiseen huoneeseen. 1 voi olla ovi, 2 kyltti ja jne...
 	uint16_t actionId; //Esim huoneen id johon ovi voi vide‰ tai vaikkapa kyltin tekstin indeksi listaan, joka on p‰in vattua.
 	uint16_t textureID; //duh itsess‰‰n selv‰ jo.

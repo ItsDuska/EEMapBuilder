@@ -30,6 +30,9 @@
     <ClCompile Include="src\chunk\ChunkHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\gui\BlockSelection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\front\Application.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\chunk\ChunkData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\gui\BlockSelection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

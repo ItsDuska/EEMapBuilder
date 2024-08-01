@@ -87,10 +87,10 @@ void EditorEngine::update(EventInfo& info)
 	case EditMode::IDLE:
 		return;
 	case EditMode::ADD:
-		addBlock(info.mousePosition, info.offset,info.guiIndex,info.solidMode);
+		addBlock(info.mousePosition, info.offset,info.guiIndex,info.solidMode); 
 		break;
 	case EditMode::DELETE:
-		addBlock(info.mousePosition, info.offset, 0, info.solidMode);
+		addBlock(info.mousePosition, info.offset, 0, info.solidMode); 
 		break;
 	default:
 		break;
