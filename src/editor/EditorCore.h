@@ -1,5 +1,6 @@
 #pragma once
 #include "EditorEngine.h"
+#include "gui/BlockSelection.h"
 #include <vector>
 
 
@@ -36,4 +37,8 @@ private:
 	sf::VertexBuffer lines;
 	const char* extensionName = ".chunk";
 	const std::string path = "data/maps/";
+
+
+	//BlockSelection gui;
+
 };

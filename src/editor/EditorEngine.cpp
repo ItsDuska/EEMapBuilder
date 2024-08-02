@@ -3,6 +3,8 @@
 #include <fstream>
 #include <filesystem>
 
+
+
 constexpr uint32_t TILEMAP_SIZE = 32u*32u;
 constexpr uint32_t TILEMAP_WIDTH = 32u;
 
@@ -16,6 +18,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentMousePosition = {};
 	sheetWidthInTiles = 0;
 
+	handler = std::make_unique<chunk::ChunkHandler>();
 
 	//std::string spriteSheet = "data/texture/TestSpriteSheet.png";
 	std::string spriteSheet = "data/texture/FinalRuoho.png";
@@ -34,7 +37,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	spriteSheetSize = texture.getSize();
 	sheetWidthInTiles = spriteSheetSize.x / textureSize.x;
 
-	handler.setAssetSizes(tileSize, textureSize,sheetWidthInTiles);
+	handler->setAssetSizes(tileSize, textureSize,sheetWidthInTiles);
 
 	spritesPerRow = spriteSheetSize.x / textureSize.x;
 	spritesPerColumn = spriteSheetSize.y / textureSize.y;
@@ -64,7 +67,8 @@ void EditorEngine::createMap(std::string& filename)
 {
 	if (std::filesystem::exists(filename))
 	{
-		handler.loadFromFile(filename);
+		this->fileName = filename;
+		handler->loadFromFile(filename);
 	}
 }
 
@@ -92,16 +96,18 @@ void EditorEngine::update(EventInfo& info)
 	currentMousePosition = {((info.offset.x+textureSize.x) * tileSize.x),
 		((info.offset.y+textureSize.y) * tileSize.y) };
 
-	handler.update(currentMousePosition);
+	handler->update(currentMousePosition);
 
 	shader.setUniform("solidBlockVisibility", static_cast<float>(info.showSolidBlocks));
 
+	if (info.hardReset)
+	{
+		return;
+	}
 
 	updateTextDisplay(info);
 
 	const sf::Int32 cooldown = 50;
-
-
 	if (clock.getElapsedTime().asMilliseconds() <= cooldown)
 	{
 		return;
@@ -118,21 +124,39 @@ void EditorEngine::update(EventInfo& info)
 	case EditMode::DELETE:
 		addBlock(info.mousePosition, info.offset, 0, info.solidMode); 
 		break;
+	case EditMode::INSPECT:
+		info.guiIndex = inspectBlock(info.mousePosition, info.offset);
+		break;
 	default:
 		break;
 	}
+
 
 }
 
 void EditorEngine::saveMap(std::string& filename)
 {
 	const auto start = std::chrono::high_resolution_clock::now();
-	handler.saveToFile(filename);
+	handler->saveToFile(filename);
 	const auto end = std::chrono::high_resolution_clock::now();
 
 	const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
 	std::cout << "Saving duration: " << duration.count() << "milliseconds\n";
+}
+
+void EditorEngine::hardReset()
+{
+	handler.reset();
+
+	//Tuhoo tiedosto.
+	if (std::filesystem::remove(fileName))
+	{
+		std::cout << "guh???\n";
+	}
+	handler = std::make_unique<chunk::ChunkHandler>();
+	handler->setAssetSizes(tileSize, textureSize, sheetWidthInTiles);
+	createMap(fileName);
 }
 
 void EditorEngine::render(sf::RenderTarget& window)
@@ -143,7 +167,7 @@ void EditorEngine::render(sf::RenderTarget& window)
 	view.setCenter(newView);
 
 	window.setView(view);
-	handler.renderActiveChunks(window, states);
+	handler->renderActiveChunks(window, states);
 	window.setView(window.getDefaultView());
 	window.draw(currentTexture);
 	window.draw(infoText);
@@ -183,8 +207,14 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const 
 
 	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
 
-	ChunkData* chunkData = handler.getChunk(chunkPosition);
-	sf::VertexBuffer* buffer = handler.getBuffer(chunkPosition);
+	ChunkData* chunkData = handler->getChunk(chunkPosition);
+	sf::VertexBuffer* buffer = handler->getBuffer(chunkPosition);
+
+
+	if (chunkData == nullptr || buffer == nullptr)
+	{
+		return;
+	}
 
 	chunkData->tilemap[index] = guiIndex;
 
@@ -205,6 +235,35 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const 
 	lastPosition = newPosition;	
 }
 
+int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
+{
+	sf::Vector2i newPosition(position.x / tileSize.x, position.y / tileSize.y);
+	newPosition += offset;
+
+	const int width = static_cast<int>(TILEMAP_WIDTH);
+
+	const sf::Vector2i chunkPosition(
+		newPosition.x >= 0 ? newPosition.x / width : (newPosition.x - (width - 1)) / width,
+		newPosition.y >= 0 ? newPosition.y / width : (newPosition.y - (width - 1)) / width
+	);
+
+	const sf::Vector2i positionInGrid(
+		newPosition.x >= 0 ? newPosition.x % width : (width - 1) + ((newPosition.x + 1) % width),
+		newPosition.y >= 0 ? newPosition.y % width : (width - 1) + ((newPosition.y + 1) % width)
+	);
+
+	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
+	ChunkData* chunkData = handler->getChunk(chunkPosition);
+
+
+	if (chunkData == nullptr)
+	{
+		return 0;
+	}
+
+	return static_cast<int>(chunkData->tilemap[index]);
+}
+
 void EditorEngine::updateTextDisplay(EventInfo& info)
 {
 	rawText = "Solid Mode (CTRL) : " + std::to_string(info.solidMode) +
@@ -213,7 +272,9 @@ void EditorEngine::updateTextDisplay(EventInfo& info)
 		"\nSave (TAB)"
 		"\nQuit (ESC)"
 		"\nOpen Menu (E)"
-		"\nMove (WASD) duh"; 
+		"\nMove (WASD) duh"
+		"\nHard Reset (DELETE)"; 
+
 
 	infoText.setString(rawText);
 }

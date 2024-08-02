@@ -23,6 +23,7 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     info.solidMode = false;
     info.showSolidBlocks = false;
     info.showLines = true;
+    info.hardReset = false;
    
 	lines.setPrimitiveType(sf::Lines);
 	lines.setUsage(sf::VertexBuffer::Static);
@@ -30,6 +31,8 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     createLines(windowSize);
     fileName = path + "EpistePng" + extensionName;
     engine.createMap(fileName);
+
+    //gui.constructElements();
 }
 
 EditorCore::~EditorCore()
@@ -39,6 +42,19 @@ EditorCore::~EditorCore()
 
 void EditorCore::update()
 {
+    
+    if (info.activeInventory)
+    {
+        /*
+        int possibleIndex = gui.select(info.mousePosition);
+
+        if (possibleIndex != -1)
+        {
+            info.guiIndex = possibleIndex;
+        }
+        */
+    }
+
     engine.update(info);
 
     if (!info.mouseActive)
@@ -66,6 +82,14 @@ void EditorCore::draw(sf::RenderWindow& window)
         }
     }
 
+
+    if (info.hardReset)
+    {
+        info.hardReset = false;
+        return;
+    }
+
+
     engine.render(window);
 
     if (info.showLines)
@@ -76,6 +100,7 @@ void EditorCore::draw(sf::RenderWindow& window)
 
 void EditorCore::events(sf::Event& sfEvent)
 {
+    static int temp = 0;
     switch (sfEvent.type)
     {
     case sf::Event::MouseWheelScrolled:
@@ -85,6 +110,10 @@ void EditorCore::events(sf::Event& sfEvent)
         if (sfEvent.mouseButton.button == sf::Mouse::Left)
         {
             info.mode = EditMode::ADD;
+        }
+        else if (sfEvent.mouseButton.button == sf::Mouse::Middle)
+        {
+            info.mode = EditMode::INSPECT;
         }
         else if (sfEvent.mouseButton.button == sf::Mouse::Right)
         {
@@ -96,14 +125,8 @@ void EditorCore::events(sf::Event& sfEvent)
     case sf::Event::MouseButtonReleased:
         info.mouseActive = false;
         break;
-    case sf::Event::KeyReleased:
-        //1-9 tabs
-        if (((sfEvent.key.code - sf::Keyboard::Num1) | (sf::Keyboard::Num9 - sfEvent.key.code)) >= 0)
-        {
-            currentTab = sfEvent.key.code - static_cast<uint32_t>(sf::Keyboard::Num1);
-            break;
-        }
 
+    case sf::Event::KeyPressed:
         switch (sfEvent.key.code)
         {
         case sf::Keyboard::Key::A:
@@ -118,6 +141,29 @@ void EditorCore::events(sf::Event& sfEvent)
         case sf::Keyboard::Key::S:
             info.offset.y++;
             break;
+        case sf::Keyboard::Delete:
+            temp++;
+            if (temp > 120)
+            {
+                temp = 0;
+                engine.hardReset();
+                info.hardReset = true;
+            }
+            break;
+        }
+        break;
+
+
+    case sf::Event::KeyReleased:
+        //1-9 tabs
+        if (((sfEvent.key.code - sf::Keyboard::Num1) | (sf::Keyboard::Num9 - sfEvent.key.code)) >= 0)
+        {
+            currentTab = sfEvent.key.code - static_cast<uint32_t>(sf::Keyboard::Num1);
+            break;
+        }
+
+        switch (sfEvent.key.code)
+        {
         case sf::Keyboard::Key::Tab:
             engine.saveMap(fileName);
             break;
@@ -130,10 +176,12 @@ void EditorCore::events(sf::Event& sfEvent)
             std::cout << "SHOWING MODE: " << info.showSolidBlocks << "\n";
             break;
         case sf::Keyboard::E:
+            info.activeInventory = !info.activeInventory;
             break;
         case sf::Keyboard::Space:
             info.showLines = !info.showLines;
             break;
+        
         default:
             break;
         }

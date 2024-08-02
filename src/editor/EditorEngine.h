@@ -48,6 +48,7 @@ enum class EditMode : char
 {
 	IDLE,
 	ADD,
+	INSPECT,
 	DELETE
 };
 
@@ -61,6 +62,8 @@ struct EventInfo
 	bool solidMode;
 	bool showSolidBlocks;
 	bool showLines;
+	bool activeInventory;
+	bool hardReset;
 };
 
 
@@ -71,17 +74,22 @@ public:
 	void createMap(std::string& filename);
 	void update(EventInfo& info);
 	void saveMap(std::string& filename);
+	void hardReset();
+
 
 	void render(sf::RenderTarget& window);
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex,bool isSolid);
 	void addEntity(); //TODO:
 	void deleteEntity(); //TODO:
+	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
+
+
 
 	void updateTextDisplay(EventInfo& info);
 
 private:
-	chunk::ChunkHandler handler;
+	std::unique_ptr<chunk::ChunkHandler> handler;
 
 
 
@@ -115,6 +123,7 @@ private:
 	std::string rawText;
 
 	sf::Clock clock;
+	std::string fileName;
 
 };
 

@@ -4,18 +4,18 @@
 class BlockSelection
 {
 public:
-	BlockSelection(sf::Vector2f& windowSize, sf::Vector2i& blockSize,sf::Vector2f& staticImageSize, sf::Vector2f& animatedImageSize);
-
+	//BlockSelection(sf::Vector2f& windowSize, sf::Vector2i& blockSize,sf::Vector2f& staticImageSize, sf::Vector2f& animatedImageSize);
+	void awake(sf::Vector2f& windowSize, sf::Vector2i& blockSize);
 
 	void draw(sf::RenderTarget& target, sf::Texture& spriteSheetStatic, sf::Texture& spriteSheetAnimated) const;
 
 
 	// returns the blocks texture index
-	int select(sf::Vector2f& mousePosition); 
+	int select(sf::Vector2i& mousePosition); 
 
-private:
+
 	void constructElements(); // rakentaa VBO:n jossa on kaikki blockit.
-
+private:
 
 private:
 	sf::Vector2i blockSize;

@@ -1,20 +1,5 @@
 #include "BlockSelection.h"
 
-BlockSelection::BlockSelection(sf::Vector2f& windowSize, sf::Vector2i& blockSize, sf::Vector2f& staticImageSize, sf::Vector2f& animatedImageSize)
-{
-
-    int newX = staticImageSize.x / blockSize.x;
-    int newY = staticImageSize.y / blockSize.y;
-
-
-    int newXX = animatedImageSize.x / blockSize.x;
-    int newYY = animatedImageSize.y / blockSize.y;
-
-	staticSize = {newX,newY};
-	animatedSize = { newXX,newYY };
-    this->blockSize = blockSize;
-
-}
 
 void BlockSelection::constructElements()
 {
@@ -24,51 +9,47 @@ void BlockSelection::constructElements()
     int tileSize = 32;
 
     // M‰‰ritet‰‰n, montako palikkaa mahtuu yhteen riviin ja sarakkeeseen
-    int blocksPerRow = static_cast<int>(windowSize.x) / tileSize;
-    int blocksPerCol = static_cast<int>(windowSize.y) / tileSize;
+    int blocksPerRow = static_cast<int>(baseWindowSize.x) / tileSize;
+    int blocksPerCol = static_cast<int>(baseWindowSize.y) / tileSize;
 
     // Oletetaan, ett‰ spriteSheetStatic sis‰lt‰‰ 'n' palikkaa
     int numBlocks = blocksPerRow * blocksPerCol;
 
+    std::vector<sf::Vertex> vertices;
+    vertices.reserve(numBlocks * 4); // Jokainen palikka tarvitsee 4 vertexi‰
 
-    //sf::Vector2i blockSpace;
-    sf::VertexArray buffer(sf::Quads, staticSize.x * staticSize.y * 4);
+    for (int i = 0; i < blocksPerCol; ++i) {
+        for (int j = 0; j < blocksPerRow; ++j) {
+            int index = i * blocksPerRow + j;
 
-
-    for (int y = 0; y < blocksPerCol; ++y)
-    {
-        for (int x = 0; x < blocksPerRow; ++x)
-        {
-            int index = y * blocksPerRow + x;
-
-            if (index >= numBlocks)
-            {
+            if (index >= numBlocks) {
                 break;
             }
 
-            int index = y * staticSize.x + x;
-            int sidebarX = 600 + (index % 4) * blockSize.x;
-            int sidebarY = (index / 4) * blockSize.y;
+            sf::Vertex quad[4];
 
-            //const int index = (y * x) * 4;
-            sf::Vertex* quad = &buffer[index];
+            quad[0].position = sf::Vector2f(j * tileSize, i * tileSize);
+            quad[1].position = sf::Vector2f((j + 1) * tileSize, i * tileSize);
+            quad[2].position = sf::Vector2f((j + 1) * tileSize, (i + 1) * tileSize);
+            quad[3].position = sf::Vector2f(j * tileSize, (i + 1) * tileSize);
 
-            quad[0].position = sf::Vector2f(sidebarX, sidebarY);
-            quad[1].position = sf::Vector2f(sidebarX + blockSize.x, sidebarY);
-            quad[2].position = sf::Vector2f(sidebarX + blockSize.x, sidebarY + blockSize.y);
-            quad[3].position = sf::Vector2f(sidebarX, sidebarY + blockSize.y);
+            quad[0].texCoords = sf::Vector2f(j * tileSize, i * tileSize);
+            quad[1].texCoords = sf::Vector2f((j + 1) * tileSize, i * tileSize);
+            quad[2].texCoords = sf::Vector2f((j + 1) * tileSize, (i + 1) * tileSize);
+            quad[3].texCoords = sf::Vector2f(j * tileSize, (i + 1) * tileSize);
 
-            quad[0].texCoords = sf::Vector2f(x * blockSize.y, y * blockSize.y);
-            quad[1].texCoords = sf::Vector2f((x + 1) * blockSize.x, y * blockSize.y);
-            quad[2].texCoords = sf::Vector2f((x + 1) * blockSize.x, (y + 1) * blockSize.y);
-            quad[3].texCoords = sf::Vector2f(x * blockSize.x, (y + 1) * blockSize.y);
-
-           
-
+            vertices.push_back(quad[0]);
+            vertices.push_back(quad[1]);
+            vertices.push_back(quad[2]);
+            vertices.push_back(quad[3]);
         }
     }
 
+    // Luo VertexBuffer ja t‰yt‰ se verticeill‰
+    staticBlockBuffer.create(vertices.size());
+    staticBlockBuffer.update(vertices.data());
 }
+
 
 void BlockSelection::draw(sf::RenderTarget& target,sf::Texture& spriteSheetStatic, sf::Texture& spriteSheetAnimated) const
 {
