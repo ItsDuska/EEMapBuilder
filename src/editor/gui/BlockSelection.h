@@ -21,7 +21,7 @@ private:
 	sf::Vector2i blockSize;
 	sf::Vector2i staticSize;
 	sf::Vector2i animatedSize;
-	
+	sf::Vector2f baseWindowSize;
 
 	// GUI ELEMENTS
 	sf::RectangleShape background;
@@ -38,8 +38,10 @@ private:
 * 
 * tabit. eka on palikoille ja toka on animoiduille palikoille
 * klikkaa mistä valitaan.
-* 
-* 
+*/
+
+
+/* 
 * Looseri joudut tekeen tän oikeesti loppuun.
 * https://tenor.com/view/byuntear-cat-mocking-gif-13935821400850516732
 */

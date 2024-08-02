@@ -60,6 +60,7 @@ struct EventInfo
 	bool mouseActive;
 	bool solidMode;
 	bool showSolidBlocks;
+	bool showLines;
 };
 
 
@@ -76,6 +77,8 @@ private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex,bool isSolid);
 	void addEntity(); //TODO:
 	void deleteEntity(); //TODO:
+
+	void updateTextDisplay(EventInfo& info);
 
 private:
 	chunk::ChunkHandler handler;
@@ -106,6 +109,12 @@ private:
 	int totalSprites;
 
 	sf::Shader shader;
+
+	sf::Font font;
+	sf::Text infoText;
+	std::string rawText;
+
+	sf::Clock clock;
 
 };
 

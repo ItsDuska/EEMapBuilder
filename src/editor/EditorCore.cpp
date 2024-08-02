@@ -22,6 +22,7 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     info.offset = { 0,0 };
     info.solidMode = false;
     info.showSolidBlocks = false;
+    info.showLines = true;
    
 	lines.setPrimitiveType(sf::Lines);
 	lines.setUsage(sf::VertexBuffer::Static);
@@ -66,7 +67,11 @@ void EditorCore::draw(sf::RenderWindow& window)
     }
 
     engine.render(window);
-    window.draw(lines);
+
+    if (info.showLines)
+    {
+        window.draw(lines);
+    }
 }
 
 void EditorCore::events(sf::Event& sfEvent)
@@ -125,6 +130,9 @@ void EditorCore::events(sf::Event& sfEvent)
             std::cout << "SHOWING MODE: " << info.showSolidBlocks << "\n";
             break;
         case sf::Keyboard::E:
+            break;
+        case sf::Keyboard::Space:
+            info.showLines = !info.showLines;
             break;
         default:
             break;

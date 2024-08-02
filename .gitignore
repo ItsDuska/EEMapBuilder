@@ -368,3 +368,7 @@ FodyWeavers.xsd
 .EEMapBuilder/
 
 *.dll
+/data/texture/pixil-frame-0_7.png
+/data/texture/pixil-frame-0_8.png
+/data/texture/FinalRuoho.png
+/data/fonts/DotGothic16-Regular.ttf

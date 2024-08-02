@@ -19,14 +19,33 @@ BlockSelection::BlockSelection(sf::Vector2f& windowSize, sf::Vector2i& blockSize
 void BlockSelection::constructElements()
 {
 
+
+
+    int tileSize = 32;
+
+    // M‰‰ritet‰‰n, montako palikkaa mahtuu yhteen riviin ja sarakkeeseen
+    int blocksPerRow = static_cast<int>(windowSize.x) / tileSize;
+    int blocksPerCol = static_cast<int>(windowSize.y) / tileSize;
+
+    // Oletetaan, ett‰ spriteSheetStatic sis‰lt‰‰ 'n' palikkaa
+    int numBlocks = blocksPerRow * blocksPerCol;
+
+
     //sf::Vector2i blockSpace;
     sf::VertexArray buffer(sf::Quads, staticSize.x * staticSize.y * 4);
 
 
-    for (int y = 0; y < staticSize.x; ++y)
+    for (int y = 0; y < blocksPerCol; ++y)
     {
-        for (int x = 0; x < staticSize.y; ++x)
+        for (int x = 0; x < blocksPerRow; ++x)
         {
+            int index = y * blocksPerRow + x;
+
+            if (index >= numBlocks)
+            {
+                break;
+            }
+
             int index = y * staticSize.x + x;
             int sidebarX = 600 + (index % 4) * blockSize.x;
             int sidebarY = (index / 4) * blockSize.y;

@@ -154,6 +154,9 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         chunks.resize(sizes.chunks);
     }
 
+    std::cout << "Size of entities : " << sizes.entities << "\n";
+
+
     // Reconstruct chunks and entities
     for (size_t i = 0; i < sizes.chunks; ++i)
     {
@@ -163,6 +166,7 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
 
         for (size_t j = chunk.entityBuffer.offset; j < chunk.entityBuffer.offset + chunk.entityBuffer.count; ++j)
         {
+            std::cout << "current Entity Index : " << j << "\n";
             editorChunk.entities.push_back(loadedEntities[j]);
         }
 
@@ -191,12 +195,12 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
     BufferSizes sizes{};
     outFile.seekp(sizeof(BufferSizes)); // 16 byte offset...
 
+
+    //calculate the max amount of entities for the buffer that could be saved
     for (const auto& entry : chunkMap)
     {
         EditorSideChunkData& chunk = chunks[entry.second];
         sizes.entities += chunk.entities.size();
-        chunk.rawData.entityBuffer.offset = sizes.entities;
-        chunk.rawData.entityBuffer.count = chunk.entities.size(); 
     }
 
     std::vector<EntityTile> allEntities;
@@ -204,13 +208,20 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
 
     for (const auto& entry : chunkMap)
     {
-        const EditorSideChunkData& chunk = chunks[entry.second];
+        EditorSideChunkData& chunk = chunks[entry.second];
         if (!isChunkEmpty(chunk.rawData.tilemap, TILE_MAP_SIZE))
         {
             outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
             sizes.chunks++;
             
+            chunk.rawData.entityBuffer.offset = sizes.entities;
+            chunk.rawData.entityBuffer.count = chunk.entities.size();
+
             allEntities.insert(allEntities.end(), chunk.entities.begin(), chunk.entities.end());
+        }
+        else
+        {
+            sizes.entities -= chunk.entities.size();
         }
     }
 

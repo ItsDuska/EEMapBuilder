@@ -6,7 +6,6 @@
 constexpr uint32_t TILEMAP_SIZE = 32u*32u;
 constexpr uint32_t TILEMAP_WIDTH = 32u;
 
-
 EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 {
 	this->windowSize = windowSize;
@@ -17,7 +16,10 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentMousePosition = {};
 	sheetWidthInTiles = 0;
 
-	if (!texture.loadFromFile("data/texture/TestSpriteSheet.png"))
+
+	//std::string spriteSheet = "data/texture/TestSpriteSheet.png";
+	std::string spriteSheet = "data/texture/FinalRuoho.png";
+	if (!texture.loadFromFile(spriteSheet))
 	{
 		std::cerr << "ERROR: Can't open texture!\n";
 		return;
@@ -26,7 +28,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 
 	currentTexture.setTexture(texture);
 	currentTexture.setScale(sf::Vector2f(4.f, 4.f));
-	sf::IntRect rect(0, 0, 16, 16);
+	sf::IntRect rect(0, 0, textureSize.x,textureSize.y);
 	currentTexture.setTextureRect(rect);
 
 	spriteSheetSize = texture.getSize();
@@ -44,6 +46,18 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	}
 
 	states.shader = &shader;
+
+
+	if (!font.loadFromFile("data/fonts/DotGothic16-Regular.ttf"))
+	{
+		std::cerr << "ERROR: Failed to load font... guh?\n";
+	}
+
+	infoText.setFont(font);
+
+	infoText.setPosition(0.f, 0.f);
+	clock.restart();
+
 }
 
 void EditorEngine::createMap(std::string& filename)
@@ -75,12 +89,24 @@ void EditorEngine::update(EventInfo& info)
 
 	viewOffset = { info.offset.x * tileSize.x, info.offset.y * tileSize.y };
 
-	currentMousePosition = {((info.offset.x+16) * tileSize.x),
-		((info.offset.y+16) * tileSize.y) };
+	currentMousePosition = {((info.offset.x+textureSize.x) * tileSize.x),
+		((info.offset.y+textureSize.y) * tileSize.y) };
 
 	handler.update(currentMousePosition);
 
 	shader.setUniform("solidBlockVisibility", static_cast<float>(info.showSolidBlocks));
+
+
+	updateTextDisplay(info);
+
+	const sf::Int32 cooldown = 50;
+
+
+	if (clock.getElapsedTime().asMilliseconds() <= cooldown)
+	{
+		return;
+	}
+	clock.restart();
 
 	switch (info.mode)
 	{
@@ -96,7 +122,6 @@ void EditorEngine::update(EventInfo& info)
 		break;
 	}
 
-	
 }
 
 void EditorEngine::saveMap(std::string& filename)
@@ -121,6 +146,7 @@ void EditorEngine::render(sf::RenderTarget& window)
 	handler.renderActiveChunks(window, states);
 	window.setView(window.getDefaultView());
 	window.draw(currentTexture);
+	window.draw(infoText);
 }
 
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid)
@@ -128,11 +154,15 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const 
 	sf::Vector2i newPosition(position.x / tileSize.x, position.y / tileSize.y);
 	newPosition += offset;
 
+	//sf::Vector2i newPosition((position.x + offset.x * tileSize.x) / tileSize.x,
+		//(position.y + offset.y * tileSize.y) / tileSize.y);
+	
 	if (newPosition == lastPosition)
 	{
 		return;
 	}
 
+	
 	if (guiIndex == 0)
 	{
 		currentTexCoord.x = 0;
@@ -173,5 +203,18 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const 
 	buffer->update(quad, 4, vertexOffset);
 
 	lastPosition = newPosition;	
+}
+
+void EditorEngine::updateTextDisplay(EventInfo& info)
+{
+	rawText = "Solid Mode (CTRL) : " + std::to_string(info.solidMode) +
+		"\nShow Solid Mode (SHIFT) : " + std::to_string(info.showSolidBlocks) + 
+		"\nShow Grid Mode (SPACE) : " + std::to_string(info.showLines) +
+		"\nSave (TAB)"
+		"\nQuit (ESC)"
+		"\nOpen Menu (E)"
+		"\nMove (WASD) duh"; 
+
+	infoText.setString(rawText);
 }
 

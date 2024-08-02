@@ -6,7 +6,7 @@ Application::Application()
 {
 	sf::VideoMode currentMode = sf::VideoMode::getDesktopMode();
 	
-	window = std::make_unique<sf::RenderWindow>(currentMode, "Elysian Enclave", sf::Style::Default);
+	window = std::make_unique<sf::RenderWindow>(currentMode, "Elysian Enclave", sf::Style::Fullscreen);
 	//window = std::make_unique<sf::RenderWindow>(sf::VideoMode(800,700), "Elysian Enclave", sf::Style::Default);
 	window->setFramerateLimit(60u);
 
