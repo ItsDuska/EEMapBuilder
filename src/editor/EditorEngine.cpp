@@ -20,8 +20,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 
 	handler = std::make_unique<chunk::ChunkHandler>();
 
-	//std::string spriteSheet = "data/texture/TestSpriteSheet.png";
-	std::string spriteSheet = "data/texture/FinalRuoho.png";
+	std::string spriteSheet = "data/texture/Tuukka.png";
 	if (!texture.loadFromFile(spriteSheet))
 	{
 		std::cerr << "ERROR: Can't open texture!\n";
@@ -58,8 +57,20 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 
 	infoText.setFont(font);
 
-	infoText.setPosition(0.f, 0.f);
+	infoText.setPosition(4.f, 0.f);
 	clock.restart();
+
+	EventInfo nullInfo{};
+	updateTextDisplay(nullInfo);
+
+	
+	currentTexture.setPosition(4.f, infoText.getGlobalBounds().height*1.2f);
+	currentSpriteHolderBox.setPosition(currentTexture.getPosition().x-5,currentTexture.getPosition().y - currentTexture.getGlobalBounds().height / 10);
+	currentSpriteHolderBox.setOrigin(currentTexture.getOrigin());
+	
+	currentSpriteHolderBox.setSize(currentTexture.getGlobalBounds().getSize());
+	currentSpriteHolderBox.setScale(1.2f, 1.2f);
+	currentSpriteHolderBox.setFillColor(sf::Color(0,0,0,50));
 
 }
 
@@ -90,6 +101,7 @@ void EditorEngine::update(EventInfo& info)
 	sf::IntRect rect(currentTexCoord.x*this->textureSize.x, currentTexCoord.y* this->textureSize.x,
 		this->textureSize.x, this->textureSize.y);
 	currentTexture.setTextureRect(rect);
+	
 
 	viewOffset = { info.offset.x * tileSize.x, info.offset.y * tileSize.y };
 
@@ -107,7 +119,7 @@ void EditorEngine::update(EventInfo& info)
 
 	updateTextDisplay(info);
 
-	const sf::Int32 cooldown = 50;
+	const sf::Int32 cooldown = 35;
 	if (clock.getElapsedTime().asMilliseconds() <= cooldown)
 	{
 		return;
@@ -159,7 +171,14 @@ void EditorEngine::hardReset()
 	createMap(fileName);
 }
 
-void EditorEngine::render(sf::RenderTarget& window)
+void EditorEngine::drawGUI(sf::RenderTarget& window)
+{
+	window.draw(currentSpriteHolderBox);
+	window.draw(currentTexture);
+	window.draw(infoText);
+}
+
+void EditorEngine::renderMap(sf::RenderTarget& window)
 {
 	sf::View view = window.getDefaultView();
 	sf::Vector2f newView = view.getCenter();
@@ -169,8 +188,7 @@ void EditorEngine::render(sf::RenderTarget& window)
 	window.setView(view);
 	handler->renderActiveChunks(window, states);
 	window.setView(window.getDefaultView());
-	window.draw(currentTexture);
-	window.draw(infoText);
+	
 }
 
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid)
@@ -273,6 +291,7 @@ void EditorEngine::updateTextDisplay(EventInfo& info)
 		"\nQuit (ESC)"
 		"\nOpen Menu (E)"
 		"\nMove (WASD) duh"
+		"\nGet Block (MMB)"
 		"\nHard Reset (DELETE)"; 
 
 

@@ -90,12 +90,14 @@ void EditorCore::draw(sf::RenderWindow& window)
     }
 
 
-    engine.render(window);
+    engine.renderMap(window);
 
     if (info.showLines)
     {
         window.draw(lines);
     }
+
+    engine.drawGUI(window);
 }
 
 void EditorCore::events(sf::Event& sfEvent)

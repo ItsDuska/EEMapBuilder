@@ -76,8 +76,8 @@ public:
 	void saveMap(std::string& filename);
 	void hardReset();
 
-
-	void render(sf::RenderTarget& window);
+	void drawGUI(sf::RenderTarget& window);
+	void renderMap(sf::RenderTarget& window);
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex,bool isSolid);
 	void addEntity(); //TODO:
@@ -124,6 +124,8 @@ private:
 
 	sf::Clock clock;
 	std::string fileName;
+
+	sf::RectangleShape currentSpriteHolderBox;
 
 };
 
