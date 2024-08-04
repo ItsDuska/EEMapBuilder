@@ -18,10 +18,10 @@ public:
 private:
 
 private:
-	sf::Vector2i blockSize;
-	sf::Vector2i staticSize;
-	sf::Vector2i animatedSize;
-	sf::Vector2f baseWindowSize;
+	sf::Vector2i blockSize; //texture size ect. 16x16
+	sf::Vector2i staticSize; //??
+	sf::Vector2i animatedSize; // ??
+	sf::Vector2f baseWindowSize; //GUi ikkunan koko
 
 	// GUI ELEMENTS
 	sf::RectangleShape background;

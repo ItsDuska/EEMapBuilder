@@ -183,6 +183,13 @@ void EditorCore::events(sf::Event& sfEvent)
         case sf::Keyboard::Space:
             info.showLines = !info.showLines;
             break;
+        case sf::Keyboard::Z:
+            //AMOGUS
+            engine.executeUndoAction();
+            break;
+        case sf::Keyboard::X:
+            engine.executeRedoAction();
+            break;
         
         default:
             break;

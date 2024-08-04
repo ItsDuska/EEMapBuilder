@@ -33,6 +33,9 @@
     <ClCompile Include="src\editor\gui\BlockSelection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\UndoStack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\front\Application.h">
@@ -51,6 +54,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\editor\gui\BlockSelection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\UndoStack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

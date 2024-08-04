@@ -308,7 +308,7 @@ void chunk::ChunkHandler::addVertexBuffer(sf::Vector2i& position, bool hasTileMa
             {
                 const int index = (y * CHUNK_SIZE + x) * 4;
                 sf::Vertex* quad = &vertexArray[index];
-                const sf::Vector2i vertposition(newPosition.x + x, newPosition.y + y); // vaihdoin x ja y:n paikat
+                const sf::Vector2i vertposition(newPosition.x + x, newPosition.y + y);
 
                 addQuadVertices(quad, vertposition, texCoord, tileSize, textureSize,false);
             }

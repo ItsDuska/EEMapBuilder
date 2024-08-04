@@ -142,6 +142,7 @@
     <ClCompile Include="src\editor\EditorCore.cpp" />
     <ClCompile Include="src\front\Application.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\editor\UndoStack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\editor\gui\BlockSelection.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="src\editor\EditorEngine.h" />
     <ClInclude Include="src\editor\EditorCore.h" />
     <ClInclude Include="src\front\Application.h" />
+    <ClInclude Include="src\editor\UndoStack.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\shader.frag" />

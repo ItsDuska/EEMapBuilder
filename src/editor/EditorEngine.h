@@ -6,6 +6,7 @@
 
 #include "chunk/ChunkHandler.h"
 #include "editor/gui/BlockSelection.h"
+#include "UndoStack.h"
 
 
 /*
@@ -78,13 +79,19 @@ public:
 
 	void drawGUI(sf::RenderTarget& window);
 	void renderMap(sf::RenderTarget& window);
+
+	void executeUndoAction();
+	void executeRedoAction();
 private:
-	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex,bool isSolid);
+	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid);
 	void addEntity(); //TODO:
 	void deleteEntity(); //TODO:
 	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
 
-
+	void updateVBOAndMap(const sf::Vector2i& vertPosition,
+		const sf::Vector2i& chunkPosition,
+		const sf::Vector2i& positionInChunk,
+		const int textureIndex, const bool solidMode);
 
 	void updateTextDisplay(EventInfo& info);
 
@@ -127,5 +134,6 @@ private:
 
 	sf::RectangleShape currentSpriteHolderBox;
 
+	UndoStack undoStack;
 };
 

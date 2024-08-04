@@ -4,11 +4,11 @@
 #include <filesystem>
 
 
-
 constexpr uint32_t TILEMAP_SIZE = 32u*32u;
 constexpr uint32_t TILEMAP_WIDTH = 32u;
 
 EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
+	: undoStack(20)
 {
 	this->windowSize = windowSize;
 	this->tileSize = tileSize;
@@ -161,7 +161,7 @@ void EditorEngine::hardReset()
 {
 	handler.reset();
 
-	//Tuhoo tiedosto.
+	// Tuhoo tiedosto.
 	if (std::filesystem::remove(fileName))
 	{
 		std::cout << "guh???\n";
@@ -191,20 +191,43 @@ void EditorEngine::renderMap(sf::RenderTarget& window)
 	
 }
 
+void EditorEngine::executeUndoAction()
+{
+	Action action;
+	undoStack.undo(action);
+
+	updateVBOAndMap(action.vertexPosition,
+		action.chunkPosition,
+		action.positionInChunk,
+		action.textureIndexOld,
+		action.solidModeOld
+	);
+}
+
+void EditorEngine::executeRedoAction()
+{
+	Action action;
+	undoStack.redo(action);
+
+	updateVBOAndMap(action.vertexPosition,
+		action.chunkPosition,
+		action.positionInChunk,
+		action.textureIndexCurrent,
+		action.solidModeCurrent
+	);
+
+}
+
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid)
 {
 	sf::Vector2i newPosition(position.x / tileSize.x, position.y / tileSize.y);
 	newPosition += offset;
-
-	//sf::Vector2i newPosition((position.x + offset.x * tileSize.x) / tileSize.x,
-		//(position.y + offset.y * tileSize.y) / tileSize.y);
 	
 	if (newPosition == lastPosition)
 	{
 		return;
 	}
 
-	
 	if (guiIndex == 0)
 	{
 		currentTexCoord.x = 0;
@@ -234,23 +257,19 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const 
 		return;
 	}
 
-	chunkData->tilemap[index] = guiIndex;
+	//GET DATA FOR UNDO
+	Action action{};
+	action.vertexPosition = newPosition;
+	action.chunkPosition = chunkPosition;
+	action.positionInChunk = positionInGrid;
+	action.textureIndexOld = chunkData->tilemap[index];
+	action.solidModeOld = chunk::isBitSet(chunkData->solidBlockData[positionInGrid.y], positionInGrid.x);
+	action.textureIndexCurrent = guiIndex;
+	action.solidModeCurrent = isSolid;
 
-	if (isSolid)
-	{
-		chunk::setBit(chunkData->solidBlockData[positionInGrid.y], positionInGrid.x);
-	}
-	else
-	{
-		chunk::clearBit(chunkData->solidBlockData[positionInGrid.y], positionInGrid.x);
-	}
+	undoStack.addAction(action);
 
-	sf::Vertex quad[4];
-	chunk::addQuadVertices(quad, newPosition, currentTexCoord, tileSize, textureSize,isSolid);
-	size_t vertexOffset = static_cast<size_t>(index) * 4;
-	buffer->update(quad, 4, vertexOffset);
-
-	lastPosition = newPosition;	
+	updateVBOAndMap(newPosition, chunkPosition, positionInGrid, guiIndex, isSolid);
 }
 
 int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
@@ -282,6 +301,41 @@ int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
 	return static_cast<int>(chunkData->tilemap[index]);
 }
 
+void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::Vector2i& chunkPosition, const sf::Vector2i& positionInChunk, const int textureIndex, const bool solidMode)
+{
+	const int index = positionInChunk.y * TILEMAP_WIDTH + positionInChunk.x;
+
+	ChunkData* chunkData = handler->getChunk(chunkPosition);
+	sf::VertexBuffer* buffer = handler->getBuffer(chunkPosition);
+
+	if (chunkData == nullptr || buffer == nullptr)
+	{
+		return;
+	}
+
+	chunkData->tilemap[index] = textureIndex;
+
+	if (solidMode)
+	{
+		chunk::setBit(chunkData->solidBlockData[positionInChunk.y], positionInChunk.x);
+	}
+	else
+	{
+		chunk::clearBit(chunkData->solidBlockData[positionInChunk.y], positionInChunk.x);
+	}
+
+	currentTexCoord.x = textureIndex % spritesPerRow;
+	currentTexCoord.y = textureIndex / spritesPerRow;
+
+
+	sf::Vertex quad[4];
+	chunk::addQuadVertices(quad,vertPosition, currentTexCoord, tileSize, textureSize, solidMode);
+	size_t vertexOffset = static_cast<size_t>(index) * 4;
+	buffer->update(quad, 4, vertexOffset);
+
+	lastPosition = vertPosition;
+}
+
 void EditorEngine::updateTextDisplay(EventInfo& info)
 {
 	rawText = "Solid Mode (CTRL) : " + std::to_string(info.solidMode) +
@@ -292,6 +346,8 @@ void EditorEngine::updateTextDisplay(EventInfo& info)
 		"\nOpen Menu (E)"
 		"\nMove (WASD) duh"
 		"\nGet Block (MMB)"
+		"\nUndo (Z)"
+		"\nRedo (X)"
 		"\nHard Reset (DELETE)"; 
 
 
