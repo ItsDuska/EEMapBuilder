@@ -149,6 +149,10 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
     loadedEntities.resize(sizes.entities);
     inFile.read(reinterpret_cast<char*>(loadedEntities.data()), sizeof(EntityTile) * sizes.entities);
 
+    std::vector<AnimationTile> loadedAnimations;
+    loadedAnimations.resize(sizes.animations);
+    inFile.read(reinterpret_cast<char*>(loadedAnimations.data()), sizeof(AnimationTile) * sizes.animations);
+
     if (chunks.capacity() < sizes.chunks)
     {
         chunks.resize(sizes.chunks);
@@ -168,6 +172,12 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         {
             std::cout << "current Entity Index : " << j << "\n";
             editorChunk.entities.push_back(loadedEntities[j]);
+        }
+
+        for (size_t j = chunk.animatedTileBuffer.offset; j < chunk.animatedTileBuffer.offset + chunk.animatedTileBuffer.count; ++j)
+        {
+            std::cout << "current animated Index : " << j << "\n";
+            editorChunk.animations.push_back(loadedAnimations[j]);
         }
 
         chunkMap[combineCoords(chunk.x, chunk.y)] = i;
@@ -201,10 +211,14 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
     {
         EditorSideChunkData& chunk = chunks[entry.second];
         sizes.entities += chunk.entities.size();
+        sizes.animations += chunk.animations.size();
     }
 
     std::vector<EntityTile> allEntities;
     allEntities.reserve(sizes.entities);
+
+    std::vector<AnimationTile> allAnimations;
+    allAnimations.reserve(sizes.animations);
 
     for (const auto& entry : chunkMap)
     {
@@ -217,15 +231,22 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
             chunk.rawData.entityBuffer.offset = sizes.entities;
             chunk.rawData.entityBuffer.count = chunk.entities.size();
 
+
+            chunk.rawData.animatedTileBuffer.offset = sizes.animations;
+            chunk.rawData.animatedTileBuffer.count = chunk.animations.size();
+
             allEntities.insert(allEntities.end(), chunk.entities.begin(), chunk.entities.end());
+            allAnimations.insert(allAnimations.end(), chunk.animations.begin(), chunk.animations.end());
         }
         else
         {
             sizes.entities -= chunk.entities.size();
+            sizes.animations -= chunk.animations.size();
         }
     }
 
     outFile.write(reinterpret_cast<const char*>(allEntities.data()), sizeof(EntityTile) * sizes.entities);
+    outFile.write(reinterpret_cast<const char*>(allAnimations.data()), sizeof(AnimationTile) * sizes.animations);
 
     outFile.seekp(0);
     outFile.write(reinterpret_cast<const char*>(&sizes), sizeof(BufferSizes));

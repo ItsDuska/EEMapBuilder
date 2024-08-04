@@ -46,3 +46,16 @@ bool UndoStack::redo(Action& action)
 
     return true;
 }
+
+void UndoStack::destroyBuffers()
+{
+    while (!redoStack.empty())
+    {
+        redoStack.pop();
+    }
+
+    while (!undoStack.empty())
+    {
+        undoStack.pop();
+    }
+}

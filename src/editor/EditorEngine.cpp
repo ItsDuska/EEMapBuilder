@@ -159,6 +159,8 @@ void EditorEngine::saveMap(std::string& filename)
 
 void EditorEngine::hardReset()
 {
+	undoStack.destroyBuffers();
+
 	handler.reset();
 
 	// Tuhoo tiedosto.
@@ -191,31 +193,46 @@ void EditorEngine::renderMap(sf::RenderTarget& window)
 	
 }
 
-void EditorEngine::executeUndoAction()
+void EditorEngine::executeUndoAction(sf::Vector2i& offset)
 {
 	Action action;
-	undoStack.undo(action);
+	if (!undoStack.undo(action))
+	{
+		return;
+	}
 
-	updateVBOAndMap(action.vertexPosition,
-		action.chunkPosition,
-		action.positionInChunk,
+	//sf::Vector2i newOffset = { -offset.x, -offset.y };
+
+	ChunkPositions positions;
+	calculateChunkPositions(positions, action.mousePosition, action.offset);
+
+	updateVBOAndMap(positions.positionInWorld,
+		positions.chunkPosition,
+		positions.positionInChunk,
 		action.textureIndexOld,
 		action.solidModeOld
 	);
 }
 
-void EditorEngine::executeRedoAction()
+void EditorEngine::executeRedoAction(sf::Vector2i& offset)
 {
 	Action action;
-	undoStack.redo(action);
+	if (!undoStack.redo(action))
+	{
+		return;
+	}
 
-	updateVBOAndMap(action.vertexPosition,
-		action.chunkPosition,
-		action.positionInChunk,
+	//sf::Vector2i newOffset = { -offset.x, -offset.y };
+
+	ChunkPositions positions;
+	calculateChunkPositions(positions, action.mousePosition, action.offset);
+
+	updateVBOAndMap(positions.positionInWorld,
+		positions.chunkPosition,
+		positions.positionInChunk,
 		action.textureIndexCurrent,
 		action.solidModeCurrent
 	);
-
 }
 
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid)
@@ -259,9 +276,8 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset, const 
 
 	//GET DATA FOR UNDO
 	Action action{};
-	action.vertexPosition = newPosition;
-	action.chunkPosition = chunkPosition;
-	action.positionInChunk = positionInGrid;
+	action.mousePosition = position;
+	action.offset = offset;
 	action.textureIndexOld = chunkData->tilemap[index];
 	action.solidModeOld = chunk::isBitSet(chunkData->solidBlockData[positionInGrid.y], positionInGrid.x);
 	action.textureIndexCurrent = guiIndex;
@@ -301,6 +317,29 @@ int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
 	return static_cast<int>(chunkData->tilemap[index]);
 }
 
+void EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset)
+{
+	sf::Vector2i newPosition(mousePosition.x / tileSize.x, mousePosition.y / tileSize.y);
+	newPosition += offset;
+
+	const int width = static_cast<int>(TILEMAP_WIDTH);
+
+	const sf::Vector2i chunkPosition(
+		newPosition.x >= 0 ? newPosition.x / width : (newPosition.x - (width - 1)) / width,
+		newPosition.y >= 0 ? newPosition.y / width : (newPosition.y - (width - 1)) / width
+	);
+
+	const sf::Vector2i positionInGrid(
+		newPosition.x >= 0 ? newPosition.x % width : (width - 1) + ((newPosition.x + 1) % width),
+		newPosition.y >= 0 ? newPosition.y % width : (width - 1) + ((newPosition.y + 1) % width)
+	);
+
+	positions.positionInWorld = newPosition;
+	positions.chunkPosition = chunkPosition;
+	positions.positionInChunk = positionInGrid;
+
+}
+
 void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::Vector2i& chunkPosition, const sf::Vector2i& positionInChunk, const int textureIndex, const bool solidMode)
 {
 	const int index = positionInChunk.y * TILEMAP_WIDTH + positionInChunk.x;
@@ -334,6 +373,8 @@ void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::V
 	buffer->update(quad, 4, vertexOffset);
 
 	lastPosition = vertPosition;
+
+	std::cout << lastPosition.x << "x | " << lastPosition.y << "y\n";
 }
 
 void EditorEngine::updateTextDisplay(EventInfo& info)

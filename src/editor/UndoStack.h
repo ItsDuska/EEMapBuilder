@@ -5,9 +5,8 @@
 
 struct Action
 {
-    sf::Vector2i vertexPosition;
-    sf::Vector2i chunkPosition;
-    sf::Vector2i positionInChunk;
+    sf::Vector2i mousePosition;
+    sf::Vector2i offset;
     uint16_t textureIndexOld;
     uint16_t textureIndexCurrent;
     bool solidModeOld;
@@ -23,6 +22,8 @@ public:
     void addAction(const Action& action);
     bool undo(Action& action);
     bool redo(Action& action);
+
+    void destroyBuffers();
 private:
     std::stack<Action> undoStack;
     std::stack<Action> redoStack;

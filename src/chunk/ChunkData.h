@@ -12,6 +12,7 @@ struct BufferView
 	uint16_t count; // Interaktiivisten elementtien m‰‰r‰
 };
 
+
 struct ChunkData
 {
 	int16_t x;
@@ -19,7 +20,9 @@ struct ChunkData
 	uint16_t tilemap[TILE_MAP_SIZE]; 
 	uint32_t solidBlockData[CHUNK_SIZE]; 
 	BufferView entityBuffer;
+	BufferView animatedTileBuffer;
 };
+
 
 struct EntityTile
 {
@@ -30,6 +33,16 @@ struct EntityTile
 	uint8_t frameCount; // kuinka monta animaatio framea on. 0 jos ei ole kuvaa. 1 jos on staattinen objekti.
 	float animationSpeed;
 };
+
+
+struct AnimationTile
+{
+	sf::Vector2<uint8_t> positionInChunk; 
+	uint16_t textureID; // jokaisen animaation ensimm‰inen frame on textureID. Eli jos on kaksi animaatioo niin sitten olisi id:t 0 ja 1 olemassa.
+	//uint8_t frameCount; // kuinka monta framea t‰ll‰ on
+
+};
+
 
 /*
 

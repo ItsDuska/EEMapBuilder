@@ -185,10 +185,10 @@ void EditorCore::events(sf::Event& sfEvent)
             break;
         case sf::Keyboard::Z:
             //AMOGUS
-            engine.executeUndoAction();
+            engine.executeUndoAction(info.offset);
             break;
         case sf::Keyboard::X:
-            engine.executeRedoAction();
+            engine.executeRedoAction(info.offset);
             break;
         
         default:

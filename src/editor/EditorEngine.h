@@ -67,6 +67,13 @@ struct EventInfo
 	bool hardReset;
 };
 
+struct ChunkPositions
+{
+	sf::Vector2i positionInWorld;
+	sf::Vector2i chunkPosition;
+	sf::Vector2i positionInChunk;
+};
+
 
 class EditorEngine
 {
@@ -80,13 +87,16 @@ public:
 	void drawGUI(sf::RenderTarget& window);
 	void renderMap(sf::RenderTarget& window);
 
-	void executeUndoAction();
-	void executeRedoAction();
+	void executeUndoAction(sf::Vector2i& offset);
+	void executeRedoAction(sf::Vector2i& offset);
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid);
 	void addEntity(); //TODO:
 	void deleteEntity(); //TODO:
 	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
+
+
+	void calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset);
 
 	void updateVBOAndMap(const sf::Vector2i& vertPosition,
 		const sf::Vector2i& chunkPosition,

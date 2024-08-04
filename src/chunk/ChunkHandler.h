@@ -14,8 +14,9 @@ namespace chunk
 	{
 		ChunkData rawData;
 		std::vector<EntityTile> entities;
+		std::vector<AnimationTile> animations;
 		EditorSideChunkData()
-			:rawData(), entities(10)
+			: rawData(), entities(10), animations(10)
 		{
 		}
 	};
@@ -24,6 +25,7 @@ namespace chunk
 	{
 		size_t chunks;
 		size_t entities;
+		size_t animations;
 	};
 
 
@@ -73,6 +75,8 @@ namespace chunk
 		std::vector<sf::VertexBuffer> vertexBuffers;
 		std::unordered_map<ChunkKey, uint16_t> chunkMap;
 		std::vector<sf::Vector2i> activeChunks;
+
+		sf::VertexArray animatedTiles;
 
 		sf::Vector2f tileSize;
 		sf::Vector2f textureSize;
