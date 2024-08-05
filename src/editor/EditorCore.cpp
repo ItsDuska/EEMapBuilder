@@ -15,7 +15,7 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     :cells( 12,12 ), tileSize( windowSize.y / cells.x, windowSize.y / cells.y), engine(windowSize,tileSize)
 {
     info.guiIndex = 1;
-    info.currentTab = 1;
+    info.currentTab = 0;
     info.mode = EditMode::IDLE;
     info.mousePosition = {};
     info.mouseActive = false;

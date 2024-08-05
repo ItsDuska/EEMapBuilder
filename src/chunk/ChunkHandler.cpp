@@ -212,7 +212,7 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
     }
 
     BufferSizes sizes{};
-    outFile.seekp(sizeof(BufferSizes)); // 16 byte offset...
+    outFile.seekp(sizeof(BufferSizes)); // byte offset
 
 
     //calculate the max amount of entities for the buffer that could be saved
@@ -240,16 +240,34 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
         {
             sizes.chunks++;
             
-            chunk.rawData.entityBuffer.offset = currentSizes.entities;
-            chunk.rawData.entityBuffer.count = chunk.entities.size();
+            std::vector<EntityTile> filteredEntities;
+            for (const auto& entity : chunk.entities)
+            {
+                if (entity.textureID != 0)
+                {
+                    filteredEntities.push_back(entity);
+                }
+            }
 
             chunk.rawData.animatedTileBuffer.offset = currentSizes.animations;
-            chunk.rawData.animatedTileBuffer.count = chunk.animations.size();
+            chunk.rawData.animatedTileBuffer.count = filteredEntities.size();
+
+            std::vector<AnimationTile> filteredAnimations;
+            for (const auto& animation : chunk.animations)
+            {
+                if (animation.textureID != 0)
+                {
+                    filteredAnimations.push_back(animation);
+                }
+            }
+
+            chunk.rawData.animatedTileBuffer.offset = currentSizes.animations;
+            chunk.rawData.animatedTileBuffer.count = filteredAnimations.size();
 
             outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
 
-            allEntities.insert(allEntities.end(), chunk.entities.begin(), chunk.entities.end());
-            allAnimations.insert(allAnimations.end(), chunk.animations.begin(), chunk.animations.end());
+            allEntities.insert(allEntities.end(), filteredEntities.begin(), filteredEntities.end());
+            allAnimations.insert(allAnimations.end(), filteredAnimations.begin(), filteredAnimations.end());
 
             currentSizes.entities += chunk.entities.size();
             currentSizes.animations += chunk.animations.size();
@@ -449,6 +467,12 @@ void chunk::ChunkHandler::constrcuctAnimatedTiles()
         {
             const AnimationTile& tile = data->animations[i];
             
+            if (tile.textureID == 0)
+            {
+                continue;
+            }
+
+
             const int index = (tile.positionInChunk.y * CHUNK_SIZE + tile.positionInChunk.x);
 
             const int vertexIndex = (tile.positionInChunk.y * CHUNK_SIZE + tile.positionInChunk.x) * 4;
@@ -524,7 +548,10 @@ void chunk::ChunkHandler::UpdateVATexCoords()
 
             // Päivitä animaation frame
             
-
+            if (tile.textureID == 0)
+            {
+                continue;
+            }
            
 
             totalQuads++;

@@ -7,7 +7,7 @@ void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i text
         return;
     }
 
-    frameCounts = { 6,2 };
+    frameCounts = { 0,6,2 }; // the fist value is NULL
     this->frameSize = frameSize;
     this->textureSize = textureSize;
     widthInTiles = textureSize.x / frameSize.x;
@@ -18,7 +18,13 @@ void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i text
 
 sf::Vector2i AnimationCache::getAnimationFrame(int animationIndex, int frame) const
 {
-    if (animationIndex >= startPositions.size()) {
+    if (animationIndex == 0)
+    {
+        return sf::Vector2i(0, 0);
+    }
+
+    if (animationIndex >= startPositions.size())
+    {
         std::cerr << "INFO: AnimationIndex to frames is too big... Your index is: " << animationIndex << "\n";
         animationIndex = 0;
     }
@@ -44,8 +50,8 @@ sf::Vector2i AnimationCache::getAnimationFrame(int animationIndex, int frame) co
 int AnimationCache::getStartPosition(int index)
 {
     if (index >= startPositions.size()) {
-        std::cerr << "guh? in animation buh\n";
-        return 1;
+        //std::cerr << "guh? in animation buh\n";
+        return 0;
     }
     sf::Vector2i position = startPositions[index];
     //std::cout << position.x << "x " << position.y << "y\n";
@@ -61,7 +67,7 @@ int AnimationCache::getMaxSprites()
 
 int AnimationCache::getAnimationFrameCount(int animationIndex)
 {
-    if (animationIndex < 0 || animationIndex >= frameCounts.size()) {
+    if (animationIndex <= 0 || animationIndex >= frameCounts.size()) {
         std::cerr << "sussy Animation number: returning 0. Your number is " << animationIndex << "\n";
         return 0;
     }
@@ -70,10 +76,12 @@ int AnimationCache::getAnimationFrameCount(int animationIndex)
 
 void AnimationCache::precomputeStartPositions()
 {
-    int x = 16; // Aloitus 1 pikseliä oikealle ensimmäisestä 16x16 alueesta
+    startPositions.push_back(sf::Vector2i(0, 0)); // NULL Value.
+
+    int x = 16; 
     int y = 0;
 
-    for (int i = 0; i < frameCounts.size(); ++i)
+    for (int i = 1; i < frameCounts.size(); ++i)
     {
         if (x + frameCounts[i] * frameSize.x > textureSize.x)
         {

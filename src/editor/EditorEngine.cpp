@@ -18,18 +18,10 @@ static int getRandomNumberInRange(int min, int max) {
 
 int EditorEngine::getAnimatedIndex(int index)
 {
-	//if (lastIndex == index)
-	//{
-		//return index;
-	//}
-
-
-	//std::cout << "Start index: " << index << "\n";
-
 	int total = handler->getAnimationCacheMaxSprites(); // 2
 	index = (index % total + total) % total;
-
-	return index;
+	return std::max(index,1);
+	//return index;
 }
 
 
@@ -167,52 +159,31 @@ void EditorEngine::update(EventInfo& info)
 
 	int updatedIndex = 0;
 
+
+	int guiUpdatedIndex = 0;
+
 	switch (info.currentTab)
 	{
 	case 0:
-		if (info.guiIndex <= 1)
-		{
-			updatedIndex = (info.guiIndex % totalSprites + totalSprites) % totalSprites;
-		}
-		else
-		{
-			updatedIndex = (info.guiIndex % totalSprites);
-		}
+		
+		updatedIndex = (info.guiIndex % totalSprites + totalSprites) % totalSprites;
+		
+		guiUpdatedIndex = updatedIndex;
 
 		currentTexture.setTexture(texture);
 		break;
 	case 1:
 		currentTexture.setTexture(animatedTexture);
-
-		//std::cout << "Starting index: " << info.guiIndex << "\n";
-		//if (info.guiIndex <= 0)
-		//{
-			
-		//}
-		//else
-		//{
-			//info.guiIndex = (info.guiIndex % handler->getAnimationCacheMaxSprites()+1);
-			//std::cout << "Ending index: " << info.guiIndex << "\n";
-		//}
-		if (info.guiIndex > 1)
-		{
-			info.guiIndex = 2;
-		}
 		
 		updatedIndex = this->getAnimatedIndex(info.guiIndex);
 
 		info.guiIndex = info.guiIndex % handler->getAnimationCacheMaxSprites();
 		
+		guiUpdatedIndex = handler->getAnimationCacheStartingIndex(updatedIndex);
 		break;
 	default:
 		break;
 	}
-
-
-	//std::cout << "Index: " << updatedIndex << "\n";
-
-	int guiUpdatedIndex = handler->getAnimationCacheStartingIndex(updatedIndex);
-
 
 	currentTexCoord.x = guiUpdatedIndex % spritesPerRow;
 	currentTexCoord.y = guiUpdatedIndex / spritesPerRow;
@@ -238,7 +209,17 @@ void EditorEngine::update(EventInfo& info)
 		
 		break;
 	case EditMode::DELETE:
-		addBlock(info.mousePosition, info.offset, 0, info.solidMode);
+		switch (info.currentTab)
+		{
+		case 0:
+			addBlock(info.mousePosition, info.offset, 0, info.solidMode);
+			break;
+		case 1:
+			addAnimatedBlock(info.mousePosition, info.offset, 0, 0);
+			break;
+		default:
+			break;
+		}
 		break;
 	case EditMode::INSPECT:
 		info.guiIndex = inspectBlock(info.mousePosition, info.offset);
@@ -305,8 +286,6 @@ void EditorEngine::executeUndoAction(sf::Vector2i& offset)
 		return;
 	}
 
-	//sf::Vector2i newOffset = { -offset.x, -offset.y };
-
 	ChunkPositions positions;
 	calculateChunkPositions(positions, action.mousePosition, action.offset);
 
@@ -325,8 +304,6 @@ void EditorEngine::executeRedoAction(sf::Vector2i& offset)
 	{
 		return;
 	}
-
-	//sf::Vector2i newOffset = { -offset.x, -offset.y };
 
 	ChunkPositions positions;
 	calculateChunkPositions(positions, action.mousePosition, action.offset);
@@ -403,7 +380,6 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 		return;
 	}
 
-
 	const int width = static_cast<int>(TILEMAP_WIDTH);
 
 	const sf::Vector2i chunkPosition(
@@ -418,9 +394,6 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 
 	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
 
-	//ChunkData* chunkData = handler->getChunk(chunkPosition);
-	//sf::VertexBuffer* buffer = handler->getBuffer(chunkPosition);
-
 
 	//GET DATA FOR UNDO
 	//Action action{};
@@ -431,22 +404,13 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 	//action.textureIndexCurrent = guiIndex;
 	//action.solidModeCurrent = isSolid;
 
-	//undoStack.addAction(action);
-
-
-	
-
-
-	//sf::Vertex quad[4];
-	//chunk::addQuadVertices(quad,chunkPosition, handler->getAnimatedTextureCoord(guiIndex), tileSize, textureSize, false);
-	//size_t vertexOffset = static_cast<size_t>(index) * 4;
-	//buffer->update(quad, 4, vertexOffset);
+	if (guiIndex == 0)
+	{
+		currentTexCoord.x = 0;
+		currentTexCoord.y = 0;
+	}
 
 	sf::Vector2i a = handler->getAnimatedTextureCoord(guiIndex);
-
-	//std::cout << a.x << "x | " << a.y << "y Placed Animated block here.\n";
-
-	//auto& chunk = chunks[chunkIndex];
 
 	std::vector<AnimationTile>& tiles = handler->getAnimationTileDataBuffer(chunkPosition.x, chunkPosition.y);
 
@@ -479,6 +443,7 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 	}
 
 	handler->constrcuctAnimatedTiles();
+	lastPosition = newPosition;
 	//updateVBOAndMap(newPosition, chunkPosition, positionInGrid, guiIndex, isSolid);
 }
 
@@ -584,6 +549,7 @@ void EditorEngine::updateTextDisplay(EventInfo& info)
 		"\nGet Block (MMB)"
 		"\nUndo (Z)"
 		"\nRedo (X)"
+		"\nTabs (0-1)"
 		"\nHard Reset (DELETE)"; 
 
 
