@@ -136,6 +136,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\animation\AnimationCache.cpp" />
     <ClCompile Include="src\editor\gui\BlockSelection.cpp" />
     <ClCompile Include="src\chunk\ChunkHandler.cpp" />
     <ClCompile Include="src\editor\EditorEngine.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="src\editor\UndoStack.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\animation\AnimationCache.h" />
     <ClInclude Include="src\editor\gui\BlockSelection.h" />
     <ClInclude Include="src\chunk\ChunkData.h" />
     <ClInclude Include="src\chunk\ChunkHandler.h" />

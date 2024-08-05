@@ -15,7 +15,7 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     :cells( 12,12 ), tileSize( windowSize.y / cells.x, windowSize.y / cells.y), engine(windowSize,tileSize)
 {
     info.guiIndex = 1;
-    currentTab = 0;
+    info.currentTab = 1;
     info.mode = EditMode::IDLE;
     info.mousePosition = {};
     info.mouseActive = false;
@@ -160,7 +160,7 @@ void EditorCore::events(sf::Event& sfEvent)
         //1-9 tabs
         if (((sfEvent.key.code - sf::Keyboard::Num1) | (sf::Keyboard::Num9 - sfEvent.key.code)) >= 0)
         {
-            currentTab = sfEvent.key.code - static_cast<uint32_t>(sf::Keyboard::Num1);
+            info.currentTab = sfEvent.key.code - static_cast<uint32_t>(sf::Keyboard::Num1);
             break;
         }
 

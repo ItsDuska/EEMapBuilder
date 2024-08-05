@@ -23,7 +23,6 @@ private:
 	sf::Vector2f tileSize;
 
 	EditorEngine engine;
-	uint32_t currentTab;
 	EventInfo info;
 	
 	std::string fileName;

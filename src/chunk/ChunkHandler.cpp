@@ -3,6 +3,8 @@
 #include <fstream>
 
 constexpr int AMOUNT_OF_ALLOCATED_CHUNKS = 200;
+constexpr int ANIMATED_TILES_ALLOCATION_ESTIMATE = 9 * 10 * 4;
+
 
 chunk::ChunkHandler::ChunkHandler()
 {
@@ -12,7 +14,14 @@ chunk::ChunkHandler::ChunkHandler()
     lastChunkCoord = { -1,-1 };
     loaded = false;
     sheetWidthInTiles = 0;
+
+    animatedTiles.setPrimitiveType(sf::Quads);
+    //animatedTiles.resize(ANIMATED_TILES_ALLOCATION_ESTIMATE);
+    
+
+    //animationCache.awake({16,16},{tex})
 }
+
 
 void chunk::ChunkHandler::update(sf::Vector2f& position)
 {
@@ -56,20 +65,24 @@ void chunk::ChunkHandler::removeChunk(uint16_t index)
     }
 }
 
-void chunk::ChunkHandler::setAssetSizes(sf::Vector2f& tileSize, sf::Vector2f& textureSize,int sheetWidthInTiles)
+void chunk::ChunkHandler::setAssetSizes(sf::Vector2f& tileSize, sf::Vector2f& textureSize,int sheetWidthInTiles, sf::Vector2i& animatedTextureSize)
 {
     this->tileSize = tileSize;
     this->textureSize = textureSize;
     this->sheetWidthInTiles = sheetWidthInTiles;
     chunkSize = {tileSize.x* CHUNK_SIZE,tileSize.y * CHUNK_SIZE };
+    animationCache.awake({ 16,16 }, animatedTextureSize);
 }
 
-void chunk::ChunkHandler::renderActiveChunks(sf::RenderTarget& window, sf::RenderStates& states)
+void chunk::ChunkHandler::renderActiveChunks(sf::RenderTarget& window, sf::RenderStates& states, sf::RenderStates& animatedTileState)
 {
     for (const sf::VertexBuffer& buffer : vertexBuffers)
     {
         window.draw(buffer, states); 
     }
+
+    window.draw(animatedTiles, animatedTileState);
+    //window.draw(animatedTiles, states);
 }
 
 void chunk::ChunkHandler::handleChunks()
@@ -127,6 +140,8 @@ void chunk::ChunkHandler::handleChunks()
     }
 
     this->loaded = true;
+
+    constrcuctAnimatedTiles();
 }
 
 void chunk::ChunkHandler::loadFromFile(const std::string& filename)
@@ -158,26 +173,20 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         chunks.resize(sizes.chunks);
     }
 
-    std::cout << "Size of entities : " << sizes.entities << "\n";
-
-
-    // Reconstruct chunks and entities
     for (size_t i = 0; i < sizes.chunks; ++i)
     {
         ChunkData& chunk = loadedChunks[i];
         EditorSideChunkData editorChunk;
         editorChunk.rawData = chunk;
 
-        for (size_t j = chunk.entityBuffer.offset; j < chunk.entityBuffer.offset + chunk.entityBuffer.count; ++j)
+        for (size_t indexToBuffer = chunk.entityBuffer.offset; indexToBuffer < chunk.entityBuffer.offset + chunk.entityBuffer.count; ++indexToBuffer)
         {
-            std::cout << "current Entity Index : " << j << "\n";
-            editorChunk.entities.push_back(loadedEntities[j]);
+            editorChunk.entities.push_back(loadedEntities[indexToBuffer]);
         }
 
-        for (size_t j = chunk.animatedTileBuffer.offset; j < chunk.animatedTileBuffer.offset + chunk.animatedTileBuffer.count; ++j)
+        for (size_t indexToBuffer = chunk.animatedTileBuffer.offset; indexToBuffer < chunk.animatedTileBuffer.offset + chunk.animatedTileBuffer.count; ++indexToBuffer)
         {
-            std::cout << "current animated Index : " << j << "\n";
-            editorChunk.animations.push_back(loadedAnimations[j]);
+            editorChunk.animations.push_back(loadedAnimations[indexToBuffer]);
         }
 
         chunkMap[combineCoords(chunk.x, chunk.y)] = i;
@@ -220,23 +229,30 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
     std::vector<AnimationTile> allAnimations;
     allAnimations.reserve(sizes.animations);
 
+
+    BufferSizes currentSizes{};
+
+
     for (const auto& entry : chunkMap)
     {
         EditorSideChunkData& chunk = chunks[entry.second];
         if (!isChunkEmpty(chunk.rawData.tilemap, TILE_MAP_SIZE))
         {
-            outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
             sizes.chunks++;
             
-            chunk.rawData.entityBuffer.offset = sizes.entities;
+            chunk.rawData.entityBuffer.offset = currentSizes.entities;
             chunk.rawData.entityBuffer.count = chunk.entities.size();
 
-
-            chunk.rawData.animatedTileBuffer.offset = sizes.animations;
+            chunk.rawData.animatedTileBuffer.offset = currentSizes.animations;
             chunk.rawData.animatedTileBuffer.count = chunk.animations.size();
+
+            outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
 
             allEntities.insert(allEntities.end(), chunk.entities.begin(), chunk.entities.end());
             allAnimations.insert(allAnimations.end(), chunk.animations.begin(), chunk.animations.end());
+
+            currentSizes.entities += chunk.entities.size();
+            currentSizes.animations += chunk.animations.size();
         }
         else
         {
@@ -271,9 +287,32 @@ ChunkData* chunk::ChunkHandler::getChunkData(int16_t x, int16_t y)
     return nullptr;
 }
 
+chunk::EditorSideChunkData* chunk::ChunkHandler::getEditorSideData(int16_t x, int16_t y)
+{
+    ChunkKey key = combineCoords(x, y);
+    auto it = chunkMap.find(key);
+
+    if (it != chunkMap.end())
+    {
+        return &chunks[it->second];
+    }
+
+    return nullptr;
+}
+
 uint16_t chunk::ChunkHandler::getChunkBufferIndex(sf::Vector2i& position)
 {
     return chunkMap.find(combineCoords(position.x, position.y))->second;
+}
+
+int chunk::ChunkHandler::getAnimationCacheStartingIndex(int index)
+{
+    return animationCache.getStartPosition(index);
+}
+
+int chunk::ChunkHandler::getAnimationCacheMaxSprites()
+{
+    return animationCache.getMaxSprites();
 }
 
 sf::VertexBuffer* chunk::ChunkHandler::getBuffer(const sf::Vector2i& position)
@@ -284,6 +323,16 @@ sf::VertexBuffer* chunk::ChunkHandler::getBuffer(const sf::Vector2i& position)
 ChunkData* chunk::ChunkHandler::getChunk(const sf::Vector2i& position)
 {
     return this->getChunkData(position.x,position.y);
+}
+
+sf::Vector2i chunk::ChunkHandler::getAnimatedTextureCoord(int index)
+{
+    return animationCache.getAnimationFrame(index, 0);
+}
+
+std::vector<AnimationTile>& chunk::ChunkHandler::getAnimationTileDataBuffer(int16_t x, int16_t y)
+{
+    return getEditorSideData(x, y)->animations;
 }
 
 bool chunk::ChunkHandler::chunkInMemory(sf::Vector2i& position)
@@ -375,6 +424,142 @@ void chunk::ChunkHandler::addVertexBuffer(sf::Vector2i& position, bool hasTileMa
     buffer.update(vertexArray.data());
     vertexBuffers.push_back(buffer);
 }
+
+void chunk::ChunkHandler::constrcuctAnimatedTiles()
+{
+    animatedTiles.clear();
+
+    sf::Vector2i texCoord(0, 0);
+
+    //std::cout << textureSize.x << "x | " << textureSize.x << "y\n";
+
+
+    for (const sf::Vector2i& chunkCoord : activeChunks)
+    {
+        sf::Vector2i newPosition((chunkSize.x * chunkCoord.x) / tileSize.x, (chunkSize.y * chunkCoord.y) / tileSize.y);
+
+        const EditorSideChunkData* data = getEditorSideData(chunkCoord.x, chunkCoord.y);
+        
+        if (data->animations.size() == 0)
+        {
+            continue;
+        }
+
+        for (int i = 0; i < data->animations.size(); i++)
+        {
+            const AnimationTile& tile = data->animations[i];
+            
+            const int index = (tile.positionInChunk.y * CHUNK_SIZE + tile.positionInChunk.x);
+
+            const int vertexIndex = (tile.positionInChunk.y * CHUNK_SIZE + tile.positionInChunk.x) * 4;
+            //sf::Vertex* quad = &animatedTiles[vertexIndex];
+            sf::Vertex quad[4];
+
+            const sf::Vector2i vertposition(newPosition.x + tile.positionInChunk.x, newPosition.y + tile.positionInChunk.y);
+
+            //std::cout << "TextureID at construct: " << tile.textureID << "\n";
+
+            //tile.textureID
+            texCoord = animationCache.getAnimationFrame(tile.textureID, 0);
+            //addQuadVertices(quad, vertposition, texCoord, tileSize, textureSize, false);
+
+
+
+            quad[0].position = { vertposition.x * tileSize.x ,vertposition.y * tileSize.y };
+            quad[0].texCoords = {texCoord.x * textureSize.x,texCoord.y * textureSize.y };
+
+           // std::cout << quad[0].texCoords.x << "x | " << quad[0].texCoords.x << "y\n";
+
+            quad[1].position = { (vertposition.x+1) * tileSize.x, vertposition.y* tileSize.y };
+            quad[1].texCoords = { (texCoord.x+1) * textureSize.x,texCoord.y * textureSize.y };
+
+           // std::cout << quad[1].texCoords.x << "x | " << quad[1].texCoords.x << "y\n";
+
+            quad[2].position = { (vertposition.x + 1) * tileSize.x, (vertposition.y + 1) * tileSize.y };
+            quad[2].texCoords = { (texCoord.x + 1) * textureSize.x, (texCoord.y + 1) * textureSize.y };
+
+           // std::cout << quad[2].texCoords.x << "x | " << quad[2].texCoords.x << "y\n";
+
+            quad[3].position = { vertposition.x * tileSize.x, (vertposition.y + 1) * tileSize.y };
+            quad[3].texCoords = { texCoord.x * textureSize.x, (texCoord.y + 1) * textureSize.y };
+
+           // std::cout << quad[3].texCoords.x << "x | " << quad[3].texCoords.x << "y\n";
+
+
+
+            for (int j = 0; j < 4; j++)
+            {
+                animatedTiles.append(quad[j]);
+            }
+            
+        }
+
+    }
+    
+}
+
+
+/*
+TÄÄÄÄ TUHOO SUN KONEEN OIKEESTI PLSSS FIXAAAA!!! TÄTÄ SOFTAA EI VOI SULKEA TASK MANAGERILLA
+*/
+void chunk::ChunkHandler::UpdateVATexCoords()
+{
+    int index = 0;
+    int totalQuads = 0;
+    //return; //!!!!!!!!!!!!!!!!!!!
+    //std::cout << "STARTING BATCHING\n";
+
+    const int totalFrames = getAnimationCacheMaxSprites();
+
+    for (const sf::Vector2i& chunkCoord : activeChunks) {
+        EditorSideChunkData* data = getEditorSideData(chunkCoord.x, chunkCoord.y);
+
+        if (data->animations.size() == 0)
+        {
+            continue;
+        }
+
+        for (int i = 0; i < data->animations.size(); i++) {
+            AnimationTile& tile = data->animations[i];
+
+            // Päivitä animaation frame
+            
+
+           
+
+            totalQuads++;
+
+            sf::Vertex* quad = &animatedTiles[index];
+            sf::Vector2i texCoord = animationCache.getAnimationFrame(tile.textureID, tile.currentFrame);
+
+            tile.elapsedFrames++;
+            if (tile.elapsedFrames >= tile.frameDelay)
+            {
+                tile.elapsedFrames = 0;
+                tile.currentFrame = (tile.currentFrame + 1) % animationCache.getAnimationFrameCount(tile.textureID);
+            }
+
+           
+
+            // Aseta tekstuurikoordinaatit
+
+            quad[0].texCoords = { texCoord.x * textureSize.x,texCoord.y * textureSize.y };
+            quad[1].texCoords = { (texCoord.x + 1) * textureSize.x,texCoord.y * textureSize.y };  
+            quad[2].texCoords = { (texCoord.x + 1) * textureSize.x, (texCoord.y + 1) * textureSize.y }; 
+            quad[3].texCoords = { texCoord.x * textureSize.x, (texCoord.y + 1) * textureSize.y };
+
+            //quad[0].texCoords = { static_cast<float>(texCoord.x * textureSize.x), static_cast<float>(texCoord.y * textureSize.y) };
+            //quad[1].texCoords = { static_cast<float>((texCoord.x + 1) * textureSize.x), static_cast<float>(texCoord.y * textureSize.y) };
+            //quad[2].texCoords = { static_cast<float>((texCoord.x + 1) * textureSize.x), static_cast<float>((texCoord.y + 1) * textureSize.y) };
+            //quad[3].texCoords = { static_cast<float>(texCoord.x * textureSize.x), static_cast<float>((texCoord.y + 1) * textureSize.y) };
+
+            index += 4;
+        }
+    }
+
+    //std::cout << "ENDING BATCHING\n";
+}
+
 
 void chunk::addQuadVertices(sf::Vertex* quad, const sf::Vector2i& position, const sf::Vector2i& texCoord, sf::Vector2f& tileSize, sf::Vector2f& textureSize, bool isSolid)
 {

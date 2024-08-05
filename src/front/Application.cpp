@@ -7,7 +7,7 @@ Application::Application()
 	sf::VideoMode currentMode = sf::VideoMode::getDesktopMode();
 	
 	window = std::make_unique<sf::RenderWindow>(currentMode, "EEMapBuilder", sf::Style::Fullscreen);
-	window->setFramerateLimit(60u);
+	window->setFramerateLimit(0u);
 
 	sf::Vector2u uWindowSize = window->getSize();
 	sf::Vector2f windowSize(static_cast<float>(uWindowSize.x), static_cast<float>(uWindowSize.y));
@@ -29,7 +29,14 @@ void Application::run()
 		//const auto end = std::chrono::high_resolution_clock::now();
 		//const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-		//std::cout << "Saving duration: " << duration.count() << "mikro sekuntti\n";
+		//std::cout << "frame duration: " << duration.count() << "mikro sekuntti\n";
+
+		//double frameTimeInSeconds = duration.count() / 1e6;
+
+		
+		//double fps = 1.0 / frameTimeInSeconds;
+		//std::cout << "Frame Time: " << duration << " microseconds\nFPS: " << fps << "\n\n";
+
 	}
 }
 

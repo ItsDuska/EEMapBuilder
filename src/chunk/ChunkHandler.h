@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "ChunkData.h"
 #include <unordered_map>
+#include "animation/AnimationCache.h"
 
 namespace chunk
 {
@@ -16,7 +17,7 @@ namespace chunk
 		std::vector<EntityTile> entities;
 		std::vector<AnimationTile> animations;
 		EditorSideChunkData()
-			: rawData(), entities(10), animations(10)
+			: rawData(), entities(), animations()
 		{
 		}
 	};
@@ -46,12 +47,22 @@ namespace chunk
 		void update(sf::Vector2f& position);
 		void addChunk(sf::Vector2i chunkPosition);
 		void removeChunk(uint16_t index);
-		void setAssetSizes(sf::Vector2f& tileSize, sf::Vector2f& textureSize, int sheetWidthInTiles);
+		void setAssetSizes(sf::Vector2f& tileSize,
+			sf::Vector2f& textureSize,
+			int sheetWidthInTiles,
+			sf::Vector2i& animatedTextureSize);
 
-		void renderActiveChunks(sf::RenderTarget& window,sf::RenderStates& states);
+		void renderActiveChunks(sf::RenderTarget& window,sf::RenderStates& states, sf::RenderStates& animatedTiles);
 
 		sf::VertexBuffer* getBuffer(const sf::Vector2i& position);
 		ChunkData* getChunk(const sf::Vector2i& position);
+		sf::Vector2i getAnimatedTextureCoord(int index);
+		std::vector<AnimationTile>& getAnimationTileDataBuffer(int16_t x, int16_t y);
+		int getAnimationCacheStartingIndex(int index);
+		int getAnimationCacheMaxSprites();
+
+		void constrcuctAnimatedTiles();
+		void UpdateVATexCoords();
 
 		void loadFromFile(const std::string& filename);
 		void saveToFile(const std::string& filename);
@@ -62,6 +73,7 @@ namespace chunk
 
 		ChunkKey combineCoords(int16_t x, int16_t y);
 		ChunkData* getChunkData(int16_t x, int16_t y);
+		EditorSideChunkData* getEditorSideData(int16_t x, int16_t y);
 
 		uint16_t getChunkBufferIndex(sf::Vector2i& position);
 		
@@ -69,6 +81,10 @@ namespace chunk
 		int chunkInActiveMemory(const sf::Vector2i& position);
 
 		void addVertexBuffer(sf::Vector2i& position, bool hasTileMap);
+
+
+		
+
 
 	private:
 		std::vector<EditorSideChunkData> chunks;
@@ -87,6 +103,10 @@ namespace chunk
 		int sheetWidthInTiles;
 
 		bool loaded;
+
+		AnimationCache animationCache;
+
+
 	};
 
 }

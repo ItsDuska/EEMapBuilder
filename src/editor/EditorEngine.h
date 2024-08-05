@@ -65,6 +65,7 @@ struct EventInfo
 	bool showLines;
 	bool activeInventory;
 	bool hardReset;
+	int currentTab;
 };
 
 struct ChunkPositions
@@ -90,9 +91,13 @@ public:
 	void executeUndoAction(sf::Vector2i& offset);
 	void executeRedoAction(sf::Vector2i& offset);
 private:
-	void addBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid);
+	void addBlock(sf::Vector2i& position, sf::Vector2i& offset,
+		const int guiIndex, bool isSolid);
 	void addEntity(); //TODO:
 	void deleteEntity(); //TODO:
+	void addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset,
+		const int guiIndex, bool isSolid);
+
 	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
 
 
@@ -105,6 +110,8 @@ private:
 
 	void updateTextDisplay(EventInfo& info);
 
+	int getAnimatedIndex(int index);
+
 private:
 	std::unique_ptr<chunk::ChunkHandler> handler;
 
@@ -113,6 +120,9 @@ private:
 	sf::Vector2f windowSize;
 	sf::RenderStates states;
 	sf::Texture texture;
+	sf::Texture animatedTexture;
+
+	sf::RenderStates animatedRenderStates;
 
 	sf::Vector2f tileSize;
 
@@ -121,6 +131,7 @@ private:
 	sf::Sprite currentTexture;
 
 	sf::Vector2f textureSize;
+	sf::Vector2i animatedTextureSize;
 	sf::Vector2u spriteSheetSize;
 
 	sf::Vector2i currentTexCoord;
@@ -132,6 +143,8 @@ private:
 	int spritesPerRow;
 	int spritesPerColumn;
 	int totalSprites;
+
+	int totalAnimatedSprites;
 
 	sf::Shader shader;
 
@@ -145,5 +158,7 @@ private:
 	sf::RectangleShape currentSpriteHolderBox;
 
 	UndoStack undoStack;
+
+	int lastIndex;
 };
 

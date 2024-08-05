@@ -39,7 +39,9 @@ struct AnimationTile
 {
 	sf::Vector2<uint8_t> positionInChunk; 
 	uint16_t textureID; // jokaisen animaation ensimmäinen frame on textureID. Eli jos on kaksi animaatioo niin sitten olisi id:t 0 ja 1 olemassa.
-	//uint8_t frameCount; // kuinka monta framea tällä on
+	uint16_t currentFrame;
+	uint16_t frameDelay;
+	uint16_t elapsedFrames;
 
 };
 
