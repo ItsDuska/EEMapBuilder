@@ -1,4 +1,6 @@
 #include "AnimationCache.h"
+#include <fstream>
+
 
 void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i textureSize)
 {
@@ -7,11 +9,31 @@ void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i text
         return;
     }
 
-    frameCounts = { 0,6,2 }; // the fist value is NULL
+    //frameCounts = { 0,6,2 }; // the fist value is NULL
+    frameCounts = { 0 };
     this->frameSize = frameSize;
     this->textureSize = textureSize;
     widthInTiles = textureSize.x / frameSize.x;
     built = true;
+
+
+    const char* filepath = "data/texture/animationFrames.data";
+
+    std::ifstream file(filepath);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file: " << filepath << std::endl;
+        return;
+    }
+
+    int frameCount;
+    while (file >> frameCount)
+    {
+        frameCounts.push_back(frameCount);
+    }
+
+    file.close();
+
 
     precomputeStartPositions();
 }

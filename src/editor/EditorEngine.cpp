@@ -444,7 +444,6 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 
 	handler->constrcuctAnimatedTiles();
 	lastPosition = newPosition;
-	//updateVBOAndMap(newPosition, chunkPosition, positionInGrid, guiIndex, isSolid);
 }
 
 
