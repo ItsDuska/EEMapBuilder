@@ -7,7 +7,7 @@ Application::Application()
 	sf::VideoMode currentMode = sf::VideoMode::getDesktopMode();
 	
 	window = std::make_unique<sf::RenderWindow>(currentMode, "EEMapBuilder", sf::Style::Fullscreen);
-	window->setFramerateLimit(0u);
+	window->setFramerateLimit(60u);
 
 	sf::Vector2u uWindowSize = window->getSize();
 	sf::Vector2f windowSize(static_cast<float>(uWindowSize.x), static_cast<float>(uWindowSize.y));

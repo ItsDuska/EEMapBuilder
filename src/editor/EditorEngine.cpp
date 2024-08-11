@@ -49,7 +49,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	}
 	states.texture = &texture;
 
-	std::string animatedSpriteSheet = "data/texture/TestiAnimaatio.png";
+	std::string animatedSpriteSheet = "data/texture/Olli.png";
 	if (!animatedTexture.loadFromFile(animatedSpriteSheet))
 	{
 		std::cerr << "ERROR: Can't open texture!\n";
@@ -71,6 +71,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 
 	spriteSheetSize = texture.getSize();
 	sheetWidthInTiles = spriteSheetSize.x / textureSize.x;
+	const int sheetHeightInTiles = spriteSheetSize.y / textureSize.y;
 
 	handler->setAssetSizes(tileSize, textureSize,sheetWidthInTiles,animatedTextureSize);
 
@@ -114,6 +115,13 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentSpriteHolderBox.setScale(1.2f, 1.2f);
 	currentSpriteHolderBox.setFillColor(sf::Color(0,0,0,50));
 
+
+	sf::Vector2i tempSize(textureSize.x, textureSize.y);
+	gui.awake(windowSize, tempSize,totalSprites,totalAnimatedSprites,tileSize,sheetWidthInTiles,
+		animatedSpritesPerRow, sheetHeightInTiles, animatedSpritesPerColumn,font);
+
+	gui.constructElements();
+	
 }
 
 void EditorEngine::createMap(std::string& filename)
@@ -263,6 +271,8 @@ void EditorEngine::drawGUI(sf::RenderTarget& window)
 	window.draw(currentSpriteHolderBox);
 	window.draw(currentTexture);
 	window.draw(infoText);
+
+	gui.draw(window, texture, nullptr);
 }
 
 void EditorEngine::renderMap(sf::RenderTarget& window)
@@ -314,6 +324,16 @@ void EditorEngine::executeRedoAction(sf::Vector2i& offset)
 		action.textureIndexCurrent,
 		action.solidModeCurrent
 	);
+}
+
+void EditorEngine::resetAnimationRandomness()
+{
+	handler->resetAnimationRandomness();
+}
+
+void EditorEngine::updateInventoryScrollOffset(int& offset)
+{
+	gui.updateScrollOffset(offset);
 }
 
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
@@ -436,7 +456,7 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 		AnimationTile newTile;
 		newTile.positionInChunk = inChunk;
 		newTile.textureID = guiIndex;
-		newTile.frameDelay = getRandomNumberInRange(3,6); // Viive välillä 1-5
+		newTile.frameDelay = 4; //getRandomNumberInRange(3,6); // Viive välillä 1-5
 		newTile.currentFrame = 0;
 		newTile.elapsedFrames = 0;
 		tiles.push_back(newTile);
@@ -549,6 +569,7 @@ void EditorEngine::updateTextDisplay(EventInfo& info)
 		"\nUndo (Z)"
 		"\nRedo (X)"
 		"\nTabs (0-1)"
+		"\nReset animation Randomness (G)"
 		"\nHard Reset (DELETE)"; 
 
 

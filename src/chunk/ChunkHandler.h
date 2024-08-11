@@ -63,6 +63,7 @@ namespace chunk
 
 		void constrcuctAnimatedTiles();
 		void UpdateVATexCoords();
+		void resetAnimationRandomness();
 
 		void loadFromFile(const std::string& filename);
 		void saveToFile(const std::string& filename);

@@ -31,8 +31,8 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     createLines(windowSize);
     fileName = path + "EpistePng" + extensionName;
     engine.createMap(fileName);
+    //sf::Vector2i tempblockSize(16, 16);
 
-    //gui.constructElements();
 }
 
 EditorCore::~EditorCore()
@@ -98,6 +98,9 @@ void EditorCore::draw(sf::RenderWindow& window)
     }
 
     engine.drawGUI(window);
+
+    //gui.draw(window, nullptr, nullptr);
+
 }
 
 void EditorCore::events(sf::Event& sfEvent)
@@ -107,6 +110,12 @@ void EditorCore::events(sf::Event& sfEvent)
     {
     case sf::Event::MouseWheelScrolled:
         info.guiIndex += (sfEvent.mouseWheelScroll.delta > 0) ? 1 : -1;
+        if (info.activeInventory)
+        {
+            engine.updateInventoryScrollOffset(info.guiIndex);
+        }
+
+
         break;
     case sf::Event::MouseButtonPressed:
         if (sfEvent.mouseButton.button == sf::Mouse::Left)
@@ -179,6 +188,7 @@ void EditorCore::events(sf::Event& sfEvent)
             break;
         case sf::Keyboard::E:
             info.activeInventory = !info.activeInventory;
+            std::cout << "INVENTORY MODE: " << info.activeInventory << "\n";
             break;
         case sf::Keyboard::Space:
             info.showLines = !info.showLines;
@@ -189,6 +199,9 @@ void EditorCore::events(sf::Event& sfEvent)
             break;
         case sf::Keyboard::X:
             engine.executeRedoAction(info.offset);
+            break;
+        case sf::Keyboard::G:
+            engine.resetAnimationRandomness();
             break;
         
         default:

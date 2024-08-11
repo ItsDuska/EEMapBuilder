@@ -90,6 +90,11 @@ public:
 
 	void executeUndoAction(sf::Vector2i& offset);
 	void executeRedoAction(sf::Vector2i& offset);
+
+	void resetAnimationRandomness();
+
+	void updateInventoryScrollOffset(int& offset);
+
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex, bool isSolid);
@@ -160,5 +165,8 @@ private:
 	UndoStack undoStack;
 
 	int lastIndex;
+
+	//Inventory
+	BlockSelection gui;
 };
 

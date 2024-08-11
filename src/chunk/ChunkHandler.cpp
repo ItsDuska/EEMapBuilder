@@ -587,6 +587,37 @@ void chunk::ChunkHandler::UpdateVATexCoords()
     //std::cout << "ENDING BATCHING\n";
 }
 
+void chunk::ChunkHandler::resetAnimationRandomness()
+{
+    const int totalFrames = getAnimationCacheMaxSprites();
+
+    for (const sf::Vector2i& chunkCoord : activeChunks)
+    {
+        EditorSideChunkData* data = getEditorSideData(chunkCoord.x, chunkCoord.y);
+
+        if (data->animations.size() == 0)
+        {
+            continue;
+        }
+
+        for (int i = 0; i < data->animations.size(); i++) {
+            AnimationTile& tile = data->animations[i];
+
+            // Päivitä animaation frame
+
+            if (tile.textureID == 0)
+            {
+                continue;
+            }
+
+            tile.currentFrame = 0;
+            tile.elapsedFrames = 0;
+        }
+    }
+
+
+}
+
 
 void chunk::addQuadVertices(sf::Vertex* quad, const sf::Vector2i& position, const sf::Vector2i& texCoord, sf::Vector2f& tileSize, sf::Vector2f& textureSize, bool isSolid)
 {
