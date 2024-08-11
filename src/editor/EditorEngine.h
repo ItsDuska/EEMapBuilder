@@ -66,6 +66,7 @@ struct EventInfo
 	bool activeInventory;
 	bool hardReset;
 	int currentTab;
+
 };
 
 struct ChunkPositions

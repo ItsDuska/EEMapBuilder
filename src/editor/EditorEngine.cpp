@@ -163,10 +163,7 @@ void EditorEngine::update(EventInfo& info)
 	updateTextDisplay(info);
 
 
-	if (info.activeInventory)
-	{
-		return;
-	}
+	
 
 
 
@@ -187,8 +184,8 @@ void EditorEngine::update(EventInfo& info)
 	{
 	case 0:
 		
-		updatedIndex = (info.guiIndex % totalSprites + totalSprites) % totalSprites;
-		
+		//updatedIndex = (info.guiIndex % totalSprites + totalSprites) % totalSprites;
+		updatedIndex = info.guiIndex;
 		guiUpdatedIndex = updatedIndex;
 
 		currentTexture.setTexture(texture);
@@ -208,6 +205,20 @@ void EditorEngine::update(EventInfo& info)
 
 	currentTexCoord.x = guiUpdatedIndex % spritesPerRow;
 	currentTexCoord.y = guiUpdatedIndex / spritesPerRow;
+
+
+	if (info.activeInventory)
+	{
+		if (info.mode == EditMode::ADD)
+		{
+			info.guiIndex = gui.select(info.mousePosition);
+		}
+
+
+		return;
+	}
+
+
 
 	switch (info.mode)
 	{

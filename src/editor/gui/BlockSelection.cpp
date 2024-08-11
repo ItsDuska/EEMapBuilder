@@ -5,23 +5,41 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
 {
     sf::Vector2f mousePosFloat(mousePosition.x, mousePosition.y);
 
+
     if (!background.getGlobalBounds().contains(mousePosFloat))
     {
         return -1; // ei ole gui:n sisällä. Palauta error value.
     }
 
 
+    sf::Vector2f localMousePos = mousePosFloat - backgroundOffsetPosition;
 
-    return 0;
+    float visibleYPos = localMousePos.y + currentOffset * tileSize.y;
+
+
+    int column = static_cast<int>(localMousePos.x / (tileSize.x + spacing));
+    int row = static_cast<int>(visibleYPos / (tileSize.y + spacing));
+    int blockIndex = row * staticBlockSizeInTiles.x + column+1;
+
+    if (blockIndex >= 0 && blockIndex < maxStaticTextures) // Tarkista, onko se voimassa oleva indeksi
+    {
+        // Tee jotain valitun palikan kanssa
+        std::cout << "Selected block index: " << blockIndex << std::endl;
+        return blockIndex;
+    }
+
+    return -1;
 }
 
 void BlockSelection::constructElements()
 {
     const float cornerOffset = 10.f; 
-    const float spacing = 5.5f;
+    spacing = 5.5f;
 
     const sf::Vector2f bgSize = background.getSize();
     const sf::Vector2f bgPosition = background.getPosition() + sf::Vector2f(0, this->displayTabText[0].getGlobalBounds().height * 1.25f);
+
+    backgroundOffsetPosition = bgPosition;
 
     const float bgWidth = bgSize.x;
     const float bgHeight = bgSize.y;
@@ -33,7 +51,7 @@ void BlockSelection::constructElements()
     const int blocksPerCol = static_cast<int>((bgHeight - 2 * cornerOffset + spacing) / blockWithSpacingHeight);
 
     staticBlockSizeInTiles.x = blocksPerRow;
-    staticBlockSizeInTiles.y = blocksPerRow;
+    staticBlockSizeInTiles.y = blocksPerCol;
 
 
     const int numBlocks = blocksPerRow * blocksPerCol;
@@ -172,7 +190,8 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
     view.count = 0;
 
     currentTab = 0;
-
+    spacing = 0;
+    currentOffset = 0;
 
     this->blockSize = blockSize;
 
@@ -222,6 +241,7 @@ void BlockSelection::draw(sf::RenderTarget& target,sf::Texture& spriteSheetStati
 void BlockSelection::updateScrollOffset(int& offset)
 {
     offset = std::min(std::max(offset, 0), staticTextureHeightInTiles-1);
+    currentOffset = offset;
 
     view.offset = static_cast<size_t>(offset * (staticBlockSizeInTiles.x * 4));
     view.count = staticBlockBuffer.getVertexCount() - offset;

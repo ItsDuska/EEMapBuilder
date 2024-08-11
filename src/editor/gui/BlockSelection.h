@@ -57,6 +57,8 @@ private:
 	sf::Vector2f baseWindowSize; //GUi ikkunan koko
 	sf::Vector2i staticBlockSizeInTiles;
 
+	sf::Vector2f backgroundOffsetPosition;
+
 	int maxStaticTextures;
 	int maxAniamatedTextures;
 	
@@ -66,6 +68,9 @@ private:
 	int animatedTextuereHeightInTiles;
 
 	int currentTab;
+	int currentOffset;
+
+	float spacing;
 
 	// GUI ELEMENTS
 	sf::RectangleShape background;
