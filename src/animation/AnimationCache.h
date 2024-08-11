@@ -11,6 +11,7 @@ public:
     void awake(const sf::Vector2i frameSize, const sf::Vector2i textureSize);
 
     sf::Vector2i getAnimationFrame(int animationIndex, int frame) const;
+    std::vector<sf::Vector2i>* getStartPositionsPtr();
 
     int getStartPosition(int index);
     int getMaxSprites();

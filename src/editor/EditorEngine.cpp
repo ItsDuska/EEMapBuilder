@@ -87,7 +87,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 
 	const int animatedSpritesPerRow = animatedTexture.getSize().x / animatedTextureSize.x;
 	const int animatedSpritesPerColumn = animatedTexture.getSize().y / animatedTextureSize.y;
-	totalAnimatedSprites = animatedSpritesPerColumn * animatedSpritesPerRow;
+	totalAnimatedSprites = animatedSpritesPerColumn * animatedSpritesPerRow; // Tää on väärää tietoo, heitä tää veks
 
 
 	if (!shader.loadFromFile("src/shaders/shader.vert", "src/shaders/shader.frag"))
@@ -121,12 +121,26 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentSpriteHolderBox.setFillColor(sf::Color(0,0,0,50));
 
 
-	sf::Vector2i tempSize(textureSize.x, textureSize.y);
-	gui.awake(windowSize, tempSize,totalSprites,totalAnimatedSprites,tileSize,sheetWidthInTiles,
-		animatedSpritesPerRow, sheetHeightInTiles, animatedSpritesPerColumn,font);
+	sf::Texture* texturePtrs[4] =
+	{
+		&texture,
+		&animatedTexture,
+		nullptr,
+		nullptr
+	};
 
-	gui.constructElements();
+
 	
+
+	sf::Vector2i tempSize(textureSize.x, textureSize.y);
+	gui.awake(windowSize, tempSize,totalSprites, handler->getAnimationCache().getMaxSprites(), tileSize, sheetWidthInTiles,
+		animatedSpritesPerRow, sheetHeightInTiles, animatedSpritesPerColumn,font,texturePtrs);
+
+	//gui.constructElements(nullptr);
+	gui.constructElements(handler->getAnimationCache().getStartPositionsPtr());
+	
+
+
 }
 
 void EditorEngine::createMap(std::string& filename)
@@ -162,11 +176,6 @@ void EditorEngine::update(EventInfo& info)
 
 	updateTextDisplay(info);
 
-
-	
-
-
-
 	const sf::Int32 cooldown = 35;
 	if (clock.getElapsedTime().asMilliseconds() <= cooldown)
 	{
@@ -175,41 +184,41 @@ void EditorEngine::update(EventInfo& info)
 	clock.restart();
 
 
-	int updatedIndex = 0;
+	int possibleFutureBlockTextureIndex = 0;
 
 
-	int guiUpdatedIndex = 0;
+	int guiCurrentTextureIndex = 0;
 
 	switch (info.currentTab)
 	{
 	case 0:
 		
 		//updatedIndex = (info.guiIndex % totalSprites + totalSprites) % totalSprites;
-		updatedIndex = info.guiIndex;
-		guiUpdatedIndex = updatedIndex;
+		possibleFutureBlockTextureIndex = info.guiIndex;
+		guiCurrentTextureIndex = possibleFutureBlockTextureIndex;
 
 		currentTexture.setTexture(texture);
 		break;
 	case 1:
 		currentTexture.setTexture(animatedTexture);
 		
-		updatedIndex = this->getAnimatedIndex(info.guiIndex);
+		possibleFutureBlockTextureIndex = this->getAnimatedIndex(info.guiIndex);
 
 		info.guiIndex = info.guiIndex % handler->getAnimationCacheMaxSprites();
 		
-		guiUpdatedIndex = handler->getAnimationCacheStartingIndex(updatedIndex);
+		guiCurrentTextureIndex = handler->getAnimationCacheStartingIndex(possibleFutureBlockTextureIndex);
 		break;
 	default:
 		break;
 	}
 
-	currentTexCoord.x = guiUpdatedIndex % spritesPerRow;
-	currentTexCoord.y = guiUpdatedIndex / spritesPerRow;
+	currentTexCoord.x = guiCurrentTextureIndex % spritesPerRow;
+	currentTexCoord.y = guiCurrentTextureIndex / spritesPerRow;
 
 
 	if (info.activeInventory)
 	{
-		if (info.mode == EditMode::ADD)
+		if (info.mode != EditMode::IDLE)
 		{
 			info.guiIndex = gui.select(info.mousePosition);
 		}
@@ -228,10 +237,10 @@ void EditorEngine::update(EventInfo& info)
 		switch (info.currentTab)
 		{
 		case 0:
-			addBlock(info.mousePosition, info.offset, updatedIndex, info.solidMode);
+			addBlock(info.mousePosition, info.offset, possibleFutureBlockTextureIndex, info.solidMode);
 			break;
 		case 1:
-			addAnimatedBlock(info.mousePosition, info.offset, updatedIndex, 0);
+			addAnimatedBlock(info.mousePosition, info.offset, possibleFutureBlockTextureIndex, 0);
 			break;
 		default:
 			break;
@@ -298,7 +307,7 @@ void EditorEngine::drawGUI(sf::RenderTarget& window,bool enableInventoryRenderin
 
 	if (enableInventoryRendering)
 	{
-		gui.draw(window, texture, nullptr);
+		gui.draw(window);
 	}
 }
 

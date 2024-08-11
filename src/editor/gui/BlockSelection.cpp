@@ -1,45 +1,105 @@
 #include "BlockSelection.h"
 #include <iostream>
 
+constexpr float cornerOffset = 10.f;
+
+static void createQuad(std::vector<sf::Vertex>& vertices, float xPos, float yPos, int texX, int texY,sf::Vector2f& tileSize, sf::Vector2i& blockSize)
+{
+    sf::Vertex quad[4];
+
+    float xPosNext = xPos + tileSize.x;
+    float yPosNext = yPos + tileSize.y;
+
+    quad[0].position = sf::Vector2f(xPos, yPos);
+    quad[1].position = sf::Vector2f(xPosNext, yPos);
+    quad[2].position = sf::Vector2f(xPosNext, yPosNext);
+    quad[3].position = sf::Vector2f(xPos, yPosNext);
+
+    quad[0].texCoords = sf::Vector2f(texX, texY);
+    quad[1].texCoords = sf::Vector2f(texX + blockSize.x, texY);
+    quad[2].texCoords = sf::Vector2f(texX + blockSize.x, texY + blockSize.y);
+    quad[3].texCoords = sf::Vector2f(texX, texY + blockSize.y);
+
+    vertices.push_back(quad[0]);
+    vertices.push_back(quad[1]);
+    vertices.push_back(quad[2]);
+    vertices.push_back(quad[3]);
+}
+
+
+
 int BlockSelection::select(sf::Vector2i& mousePosition)
 {
     sf::Vector2f mousePosFloat(mousePosition.x, mousePosition.y);
 
+    sf::FloatRect backgroundBounds = background.getGlobalBounds();
 
-    if (!background.getGlobalBounds().contains(mousePosFloat))
+    // MUUTA TÄÄ CONSTANT ARVOKSI JOTTA EI TARVI RECOMPUTE TÄTÄ KOKO AJAN
+    sf::FloatRect adjustedBounds( 
+        backgroundBounds.left + cornerOffset,
+        backgroundBounds.top + cornerOffset,
+        backgroundBounds.width - 2 * cornerOffset,
+        backgroundBounds.height - 2 * cornerOffset
+    );
+
+
+
+    if (!adjustedBounds.contains(mousePosFloat))
     {
         return -1; // ei ole gui:n sisällä. Palauta error value.
     }
 
+    const GUIBufferData& data = getCurrentElementData();
+
 
     sf::Vector2f localMousePos = mousePosFloat - backgroundOffsetPosition;
+    localMousePos.x -= cornerOffset;
+    localMousePos.y -= cornerOffset;
 
-    float visibleYPos = localMousePos.y + currentOffset * tileSize.y;
-
+    //float visibleYPos = localMousePos.y + currentOffset * tileSize.y;
+    float visibleYPos = localMousePos.y + currentOffset * (tileSize.y + spacing);
 
     int column = static_cast<int>(localMousePos.x / (tileSize.x + spacing));
     int row = static_cast<int>(visibleYPos / (tileSize.y + spacing));
-    int blockIndex = row * staticBlockSizeInTiles.x + column+1;
 
-    if (blockIndex >= 0 && blockIndex < maxStaticTextures) // Tarkista, onko se voimassa oleva indeksi
+    int blockIndex = row * data.sizeInTilesWithOffset.x + column;
+    if (currentTab == 1)
     {
-        // Tee jotain valitun palikan kanssa
+        blockIndex++;
+    }
+
+
+    if (blockIndex >= 0 && blockIndex < data.maxSpriteCount)
+    {
         std::cout << "Selected block index: " << blockIndex << std::endl;
         return blockIndex;
     }
 
+    std::cerr << "Amogus??: " << blockIndex << std::endl;
     return -1;
 }
 
-void BlockSelection::constructElements()
+void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animationStartIndices)
 {
-    const float cornerOffset = 10.f; 
-    spacing = 5.5f;
+    constructVBO(guiElements[0],nullptr);
+    constructVBO(guiElements[1], animationStartIndices);
+
+    // construct objects...
+    // construct layered blocks...
+
+    updateScrollOffset(currentOffset);
+
+}
+
+
+
+//Tee tästä sillee että voit heittää vaa uuden bufferin
+void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vector2i>* animationStartIndices)
+{
+    
 
     const sf::Vector2f bgSize = background.getSize();
-    const sf::Vector2f bgPosition = background.getPosition() + sf::Vector2f(0, this->displayTabText[0].getGlobalBounds().height * 1.25f);
 
-    backgroundOffsetPosition = bgPosition;
 
     const float bgWidth = bgSize.x;
     const float bgHeight = bgSize.y;
@@ -50,9 +110,7 @@ void BlockSelection::constructElements()
     const int blocksPerRow = static_cast<int>((bgWidth - 2 * cornerOffset + spacing) / blockWithSpacingWidth);
     const int blocksPerCol = static_cast<int>((bgHeight - 2 * cornerOffset + spacing) / blockWithSpacingHeight);
 
-    staticBlockSizeInTiles.x = blocksPerRow;
-    staticBlockSizeInTiles.y = blocksPerCol;
-
+    data.sizeInTilesWithOffset = { blocksPerRow, blocksPerCol };
 
     const int numBlocks = blocksPerRow * blocksPerCol;
 
@@ -63,43 +121,56 @@ void BlockSelection::constructElements()
 
     sf::Vector2i textureCordOffset(0, 0);
 
+
+    int blockIndex = 0;
+
+    if (animationStartIndices)
+    {
+        blockIndex++;
+    }
+
+
     for (int i = 0; i < blocksPerCol; ++i)
     {
-        float yPos = bgPosition.y + cornerOffset + i * blockWithSpacingHeight;  // Y-koordinaatti kerran per rivi
+        float yPos = backgroundOffsetPosition.y + cornerOffset + i * blockWithSpacingHeight;  // Y-koordinaatti kerran per rivi
         float yPosNext = yPos + tileSize.y; // Y-koordinaatti seuraavaa vertexiä varten
 
         for (int j = 0; j < blocksPerRow; ++j)
         {
-            int currentTextureIndex = i * blocksPerRow + j + 1;
-
-            if (currentTextureIndex >= maxStaticTextures)
+            if (animationStartIndices)
             {
-                getOutOfJailCard = true;
-                break;
+                if (blockIndex >= animationStartIndices->size())
+                {
+                    break;
+                }
+                   
+
+                sf::Vector2i texPos = (*animationStartIndices)[blockIndex];
+
+                int texX = texPos.x * blockSize.x;
+                int texY = texPos.y * blockSize.y;
+
+                float xPos = backgroundOffsetPosition.x + cornerOffset + j * blockWithSpacingWidth;
+                createQuad(vertices, xPos, yPos, texX, texY,tileSize,blockSize);
+
+                blockIndex++;
             }
+            else
+            {
+                int currentTextureIndex = i * blocksPerRow + j + 1;
 
-            float xPos = bgPosition.x + cornerOffset + j * blockWithSpacingWidth;  // X-koordinaatti kerran per sarake
-            float xPosNext = xPos + tileSize.x; // X-koordinaatti seuraavaa vertexiä varten
+                if (currentTextureIndex >= data.maxSpriteCount)
+                {
+                    break;
+                }
+                   
 
-            int texX = (currentTextureIndex % staticTextureWidthInTiles) * blockSize.x;
-            int texY = (currentTextureIndex / staticTextureWidthInTiles) * blockSize.y;
+                int texX = ((currentTextureIndex-1) % data.sizeInTiles.x) * blockSize.x;
+                int texY = ((currentTextureIndex-1) / data.sizeInTiles.x) * blockSize.y;
 
-            sf::Vertex quad[4];
-
-            quad[0].position = sf::Vector2f(xPos, yPos);
-            quad[1].position = sf::Vector2f(xPosNext, yPos);
-            quad[2].position = sf::Vector2f(xPosNext, yPosNext);
-            quad[3].position = sf::Vector2f(xPos, yPosNext);
-
-            quad[0].texCoords = sf::Vector2f(texX, texY);
-            quad[1].texCoords = sf::Vector2f(texX + blockSize.x, texY);
-            quad[2].texCoords = sf::Vector2f(texX + blockSize.x, texY + blockSize.y);
-            quad[3].texCoords = sf::Vector2f(texX, texY + blockSize.y);
-
-            vertices.push_back(quad[0]);
-            vertices.push_back(quad[1]);
-            vertices.push_back(quad[2]);
-            vertices.push_back(quad[3]);
+                float xPos = backgroundOffsetPosition.x + cornerOffset + j * blockWithSpacingWidth;
+                createQuad(vertices, xPos, yPos, texX, texY, tileSize, blockSize);
+            }
         }
 
         if (getOutOfJailCard)
@@ -108,14 +179,13 @@ void BlockSelection::constructElements()
         }
     }
 
-    staticBlockBuffer.setPrimitiveType(sf::PrimitiveType::Quads);
-    staticBlockBuffer.setUsage(sf::VertexBuffer::Usage::Static);
-
+    data.buffer.setPrimitiveType(sf::PrimitiveType::Quads);
+    data.buffer.setUsage(sf::VertexBuffer::Usage::Static);
 
     view.count = vertices.size();
 
-    staticBlockBuffer.create(vertices.size());
-    staticBlockBuffer.update(vertices.data());
+    data.buffer.create(vertices.size());
+    data.buffer.update(vertices.data());
 }
 
 void BlockSelection::constructGUIText(sf::Font& font)
@@ -174,6 +244,11 @@ void BlockSelection::setupBackground(sf::Vector2f windowSize)
     background.setOutlineThickness(-2);
 }
 
+GUIBufferData& BlockSelection::getCurrentElementData()
+{
+    return guiElements[currentTab];
+}
+
 
 void BlockSelection::awake(sf::Vector2f& windowSize,
     sf::Vector2i& blockSize,
@@ -184,13 +259,14 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
     int animatedTextuereWidth,
     int staticTextureHeight,
     int animatedTextuereHeight,
-    sf::Font& font)
+    sf::Font& font,
+    sf::Texture** textures)
 {
     view.offset = 0;
     view.count = 0;
 
     currentTab = 0;
-    spacing = 0;
+    spacing = 5.5f;
     currentOffset = 0;
 
     this->blockSize = blockSize;
@@ -199,29 +275,38 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
 
     this->tileSize = {tileSize.x / funnieNumber, tileSize.y / funnieNumber };
     setupBackground(windowSize);
-    this->maxStaticTextures = maxStaticTextures;
-    this->maxAniamatedTextures = maxAniamatedTextures;
 
-    staticTextureWidthInTiles = staticTextureWidth;
-    animatedTextuereWidthInTiles = animatedTextuereWidth;
-    staticTextureHeightInTiles = staticTextureHeight;
-    animatedTextuereHeightInTiles = animatedTextuereHeight;
+    // Static Blocks
+    guiElements[0].maxSpriteCount = maxStaticTextures;
+    guiElements[0].sizeInTiles = { staticTextureWidth,staticTextureHeight };
+    guiElements[0].texturePtr = textures[0];
 
-    
+    // Animated Blocks
+    guiElements[1].maxSpriteCount = maxAniamatedTextures;
+    guiElements[1].sizeInTiles = { animatedTextuereWidth,animatedTextuereHeight };
+    guiElements[1].texturePtr = textures[1];
 
+    // Objects...
+    // data here...
+
+    // Layered Blocks...
+    // data here...
     constructGUIText(font);
 
+
+
+    backgroundOffsetPosition = background.getPosition() + sf::Vector2f(0, this->displayTabText[0].getGlobalBounds().height * 1.25f);
 }
 
-void BlockSelection::draw(sf::RenderTarget& target,sf::Texture& spriteSheetStatic, sf::Texture* spriteSheetAnimated)
+void BlockSelection::draw(sf::RenderTarget& target)
 {
-    staticBufferStates.texture = &spriteSheetStatic;
+    const GUIBufferData& data = getCurrentElementData();
+    globalGUIrenderStates.texture = data.texturePtr;
 
 	target.draw(background);
 
-
-
-    target.draw(staticBlockBuffer, view.offset, view.count, staticBufferStates);
+    
+    target.draw(getCurrentElementData().buffer, view.offset, view.count, globalGUIrenderStates);
     //target.draw(staticBlockBuffer, view.offset, view.count, &spriteSheetStatic,scrollTransformOffset);
     //target.draw(staticBlockBuffer, &spriteSheetStatic);
 
@@ -240,14 +325,16 @@ void BlockSelection::draw(sf::RenderTarget& target,sf::Texture& spriteSheetStati
 
 void BlockSelection::updateScrollOffset(int& offset)
 {
-    offset = std::min(std::max(offset, 0), staticTextureHeightInTiles-1);
+    const GUIBufferData& data = getCurrentElementData();
+
+    offset = std::min(std::max(offset, 0), data.sizeInTiles.y - 1);
     currentOffset = offset;
 
-    view.offset = static_cast<size_t>(offset * (staticBlockSizeInTiles.x * 4));
-    view.count = staticBlockBuffer.getVertexCount() - offset;
+    view.offset = static_cast<size_t>(offset * (data.sizeInTilesWithOffset.x * 4));
+    view.count = data.buffer.getVertexCount() - offset;
 
-    staticBufferStates.transform = sf::Transform::Identity;
-    staticBufferStates.transform.translate(0, -offset * this->tileSize.y);
+    globalGUIrenderStates.transform = sf::Transform::Identity;
+    globalGUIrenderStates.transform.translate(0, -offset * (this->tileSize.y+spacing));
 }
 
 void BlockSelection::changeTab(int tab)

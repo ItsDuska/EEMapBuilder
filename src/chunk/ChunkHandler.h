@@ -61,6 +61,8 @@ namespace chunk
 		int getAnimationCacheStartingIndex(int index);
 		int getAnimationCacheMaxSprites();
 
+		AnimationCache& getAnimationCache();
+
 		void constrcuctAnimatedTiles();
 		void UpdateVATexCoords();
 		void resetAnimationRandomness();

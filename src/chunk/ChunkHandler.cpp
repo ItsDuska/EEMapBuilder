@@ -333,6 +333,12 @@ int chunk::ChunkHandler::getAnimationCacheMaxSprites()
     return animationCache.getMaxSprites();
 }
 
+AnimationCache& chunk::ChunkHandler::getAnimationCache()
+{
+    return animationCache;
+    // TODO: insert return statement here
+}
+
 sf::VertexBuffer* chunk::ChunkHandler::getBuffer(const sf::Vector2i& position)
 {
     return &vertexBuffers[chunkInActiveMemory(position)];

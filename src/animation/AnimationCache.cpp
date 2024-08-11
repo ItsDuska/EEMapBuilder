@@ -69,6 +69,12 @@ sf::Vector2i AnimationCache::getAnimationFrame(int animationIndex, int frame) co
     return startPos;
 }
 
+std::vector<sf::Vector2i>* AnimationCache::getStartPositionsPtr()
+{
+    return &startPositions;
+    // TODO: insert return statement here
+}
+
 int AnimationCache::getStartPosition(int index)
 {
     if (index >= startPositions.size()) {

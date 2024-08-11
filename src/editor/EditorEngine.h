@@ -118,7 +118,6 @@ private:
 
 	int getAnimatedIndex(int index);
 
-	
 
 private:
 	std::unique_ptr<chunk::ChunkHandler> handler;
@@ -171,5 +170,6 @@ private:
 
 	//Inventory
 	BlockSelection gui;
+
 };
 

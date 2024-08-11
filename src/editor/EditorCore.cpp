@@ -109,9 +109,9 @@ void EditorCore::events(sf::Event& sfEvent)
     switch (sfEvent.type)
     {
     case sf::Event::MouseWheelScrolled:
-        info.guiIndex += (sfEvent.mouseWheelScroll.delta > 0) ? 1 : -1;
         if (info.activeInventory)
         {
+            info.guiIndex += (sfEvent.mouseWheelScroll.delta > 0) ? -1 : 1;
             engine.getInventory().updateScrollOffset(info.guiIndex);
         }
 
