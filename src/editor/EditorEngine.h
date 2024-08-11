@@ -85,15 +85,15 @@ public:
 	void saveMap(std::string& filename);
 	void hardReset();
 
-	void drawGUI(sf::RenderTarget& window);
+	void drawGUI(sf::RenderTarget& window, bool enableInventoryRendering);
 	void renderMap(sf::RenderTarget& window);
 
 	void executeUndoAction(sf::Vector2i& offset);
 	void executeRedoAction(sf::Vector2i& offset);
 
 	void resetAnimationRandomness();
-
-	void updateInventoryScrollOffset(int& offset);
+	
+	BlockSelection& getInventory();
 
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset,
@@ -116,6 +116,8 @@ private:
 	void updateTextDisplay(EventInfo& info);
 
 	int getAnimatedIndex(int index);
+
+	
 
 private:
 	std::unique_ptr<chunk::ChunkHandler> handler;

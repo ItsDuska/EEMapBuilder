@@ -97,7 +97,7 @@ void EditorCore::draw(sf::RenderWindow& window)
         window.draw(lines);
     }
 
-    engine.drawGUI(window);
+    engine.drawGUI(window,info.activeInventory);
 
     //gui.draw(window, nullptr, nullptr);
 
@@ -112,7 +112,7 @@ void EditorCore::events(sf::Event& sfEvent)
         info.guiIndex += (sfEvent.mouseWheelScroll.delta > 0) ? 1 : -1;
         if (info.activeInventory)
         {
-            engine.updateInventoryScrollOffset(info.guiIndex);
+            engine.getInventory().updateScrollOffset(info.guiIndex);
         }
 
 
@@ -170,6 +170,11 @@ void EditorCore::events(sf::Event& sfEvent)
         if (((sfEvent.key.code - sf::Keyboard::Num1) | (sf::Keyboard::Num9 - sfEvent.key.code)) >= 0)
         {
             info.currentTab = sfEvent.key.code - static_cast<uint32_t>(sf::Keyboard::Num1);
+            if (info.activeInventory)
+            {
+                engine.getInventory().changeTab(info.currentTab);
+            }
+
             break;
         }
 

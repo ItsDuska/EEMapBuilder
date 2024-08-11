@@ -27,6 +27,7 @@ public:
 
 	void draw(sf::RenderTarget& target, sf::Texture& spriteSheetStatic, sf::Texture* spriteSheetAnimated);
 	void updateScrollOffset(int& offset);
+	void changeTab(int tab);
 
 	// returns the blocks texture index
 	int select(sf::Vector2i& mousePosition); 
@@ -63,6 +64,8 @@ private:
 	int animatedTextuereWidthInTiles;
 	int staticTextureHeightInTiles;
 	int animatedTextuereHeightInTiles;
+
+	int currentTab;
 
 	// GUI ELEMENTS
 	sf::RectangleShape background;

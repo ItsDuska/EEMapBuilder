@@ -121,6 +121,8 @@ void BlockSelection::constructGUIText(sf::Font& font)
         totalTextWidth += text.getGlobalBounds().width;
     }
 
+    displayTabText[0].setFillColor(sf::Color::Cyan);
+
     const float totalSpacing = (MAX_TAB_COUNT - 1) * 10.0f;
     const float totalWidth = totalTextWidth + totalSpacing;
 
@@ -169,7 +171,7 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
     view.offset = 0;
     view.count = 0;
 
-    
+    currentTab = 0;
 
 
     this->blockSize = blockSize;
@@ -226,4 +228,16 @@ void BlockSelection::updateScrollOffset(int& offset)
 
     staticBufferStates.transform = sf::Transform::Identity;
     staticBufferStates.transform.translate(0, -offset * this->tileSize.y);
+}
+
+void BlockSelection::changeTab(int tab)
+{
+    if (tab >= MAX_TAB_COUNT)
+    {
+        return;
+    }
+
+    displayTabText[currentTab].setFillColor(sf::Color::White);
+    displayTabText[tab].setFillColor(sf::Color::Cyan);
+    currentTab = tab;
 }

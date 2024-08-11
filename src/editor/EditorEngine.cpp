@@ -24,6 +24,11 @@ int EditorEngine::getAnimatedIndex(int index)
 	//return index;
 }
 
+BlockSelection& EditorEngine::getInventory()
+{
+	return gui;
+}
+
 
 EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	: undoStack(20)
@@ -157,6 +162,14 @@ void EditorEngine::update(EventInfo& info)
 
 	updateTextDisplay(info);
 
+
+	if (info.activeInventory)
+	{
+		return;
+	}
+
+
+
 	const sf::Int32 cooldown = 35;
 	if (clock.getElapsedTime().asMilliseconds() <= cooldown)
 	{
@@ -266,13 +279,16 @@ void EditorEngine::hardReset()
 	createMap(fileName);
 }
 
-void EditorEngine::drawGUI(sf::RenderTarget& window)
+void EditorEngine::drawGUI(sf::RenderTarget& window,bool enableInventoryRendering)
 {
 	window.draw(currentSpriteHolderBox);
 	window.draw(currentTexture);
 	window.draw(infoText);
 
-	gui.draw(window, texture, nullptr);
+	if (enableInventoryRendering)
+	{
+		gui.draw(window, texture, nullptr);
+	}
 }
 
 void EditorEngine::renderMap(sf::RenderTarget& window)
@@ -331,10 +347,7 @@ void EditorEngine::resetAnimationRandomness()
 	handler->resetAnimationRandomness();
 }
 
-void EditorEngine::updateInventoryScrollOffset(int& offset)
-{
-	gui.updateScrollOffset(offset);
-}
+
 
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 	const int guiIndex, bool isSolid)
