@@ -32,15 +32,7 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
 {
     sf::Vector2f mousePosFloat(mousePosition.x, mousePosition.y);
 
-    sf::FloatRect backgroundBounds = background.getGlobalBounds();
-
-    // MUUTA TÄÄ CONSTANT ARVOKSI JOTTA EI TARVI RECOMPUTE TÄTÄ KOKO AJAN
-    sf::FloatRect adjustedBounds( 
-        backgroundBounds.left + cornerOffset,
-        backgroundBounds.top + cornerOffset,
-        backgroundBounds.width - 2 * cornerOffset,
-        backgroundBounds.height - 2 * cornerOffset
-    );
+   
 
 
 
@@ -71,11 +63,11 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
 
     if (blockIndex >= 0 && blockIndex < data.maxSpriteCount)
     {
-        std::cout << "Selected block index: " << blockIndex << std::endl;
+        //std::cout << "Selected block index: " << blockIndex << std::endl;
         return blockIndex;
     }
 
-    std::cerr << "Amogus??: " << blockIndex << std::endl;
+    //std::cerr << "Amogus??: " << blockIndex << std::endl;
     return -1;
 }
 
@@ -117,11 +109,6 @@ void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vec
     std::vector<sf::Vertex> vertices;
     vertices.reserve(static_cast<size_t>(numBlocks * 4));
 
-    bool getOutOfJailCard = false;
-
-    sf::Vector2i textureCordOffset(0, 0);
-
-
     int blockIndex = 0;
 
     if (animationStartIndices)
@@ -129,11 +116,10 @@ void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vec
         blockIndex++;
     }
 
-
-    for (int i = 0; i < blocksPerCol; ++i)
+    for (int i = 0; i < data.sizeInTiles.y; ++i)
     {
-        float yPos = backgroundOffsetPosition.y + cornerOffset + i * blockWithSpacingHeight;  // Y-koordinaatti kerran per rivi
-        float yPosNext = yPos + tileSize.y; // Y-koordinaatti seuraavaa vertexiä varten
+        float yPos = backgroundOffsetPosition.y + cornerOffset + i * blockWithSpacingHeight; 
+        float yPosNext = yPos + tileSize.y;
 
         for (int j = 0; j < blocksPerRow; ++j)
         {
@@ -171,11 +157,6 @@ void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vec
                 float xPos = backgroundOffsetPosition.x + cornerOffset + j * blockWithSpacingWidth;
                 createQuad(vertices, xPos, yPos, texX, texY, tileSize, blockSize);
             }
-        }
-
-        if (getOutOfJailCard)
-        {
-            break;
         }
     }
 
@@ -242,6 +223,16 @@ void BlockSelection::setupBackground(sf::Vector2f windowSize)
     background.setFillColor(sf::Color(26u, 25u, 25u, alpha));
     background.setOutlineColor(sf::Color(200u,200u,200u,alpha));
     background.setOutlineThickness(-2);
+
+    sf::FloatRect backgroundBounds = background.getGlobalBounds();
+
+    adjustedBounds = {
+        backgroundBounds.left + cornerOffset,
+        backgroundBounds.top + cornerOffset,
+        backgroundBounds.width - 2 * cornerOffset,
+        backgroundBounds.height - 2 * cornerOffset
+    };
+
 }
 
 GUIBufferData& BlockSelection::getCurrentElementData()
@@ -307,8 +298,6 @@ void BlockSelection::draw(sf::RenderTarget& target)
 
     
     target.draw(getCurrentElementData().buffer, view.offset, view.count, globalGUIrenderStates);
-    //target.draw(staticBlockBuffer, view.offset, view.count, &spriteSheetStatic,scrollTransformOffset);
-    //target.draw(staticBlockBuffer, &spriteSheetStatic);
 
     for (int i = 0; i < MAX_TAB_COUNT; i++)
     {

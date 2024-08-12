@@ -61,7 +61,7 @@ private:
 	int currentOffset;
 
 	float spacing;
-
+	sf::FloatRect adjustedBounds;
 
 
 	// GUI ELEMENTS

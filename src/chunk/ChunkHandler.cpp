@@ -16,10 +16,6 @@ chunk::ChunkHandler::ChunkHandler()
     sheetWidthInTiles = 0;
 
     animatedTiles.setPrimitiveType(sf::Quads);
-    //animatedTiles.resize(ANIMATED_TILES_ALLOCATION_ESTIMATE);
-    
-
-    //animationCache.awake({16,16},{tex})
 }
 
 
@@ -82,7 +78,6 @@ void chunk::ChunkHandler::renderActiveChunks(sf::RenderTarget& window, sf::Rende
     }
 
     window.draw(animatedTiles, animatedTileState);
-    //window.draw(animatedTiles, states);
 }
 
 void chunk::ChunkHandler::handleChunks()
@@ -541,7 +536,8 @@ void chunk::ChunkHandler::UpdateVATexCoords()
 
     const int totalFrames = getAnimationCacheMaxSprites();
 
-    for (const sf::Vector2i& chunkCoord : activeChunks) {
+    for (const sf::Vector2i& chunkCoord : activeChunks)
+    {
         EditorSideChunkData* data = getEditorSideData(chunkCoord.x, chunkCoord.y);
 
         if (data->animations.size() == 0)
@@ -549,7 +545,8 @@ void chunk::ChunkHandler::UpdateVATexCoords()
             continue;
         }
 
-        for (int i = 0; i < data->animations.size(); i++) {
+        for (int i = 0; i < data->animations.size(); i++) 
+        {
             AnimationTile& tile = data->animations[i];
 
             // Päivitä animaation frame

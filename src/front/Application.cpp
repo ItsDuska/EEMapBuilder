@@ -35,7 +35,7 @@ void Application::run()
 
 		
 		//double fps = 1.0 / frameTimeInSeconds;
-		//std::cout << "Frame Time: " << duration << " microseconds\nFPS: " << fps << "\n\n";
+		//std::cout << "Frame Time: " << duration << " microseconds\nFPS: " << fps << " pls usko, käytän kuitenki väärää kaavaa tähä :clueless:\n\n";
 
 	}
 }
