@@ -31,7 +31,6 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     createLines(windowSize);
     fileName = path + "EpistePng" + extensionName;
     engine.createMap(fileName);
-    //sf::Vector2i tempblockSize(16, 16);
 
 }
 
@@ -42,19 +41,6 @@ EditorCore::~EditorCore()
 
 void EditorCore::update()
 {
-    
-    if (info.activeInventory)
-    {
-        /*
-        int possibleIndex = gui.select(info.mousePosition);
-
-        if (possibleIndex != -1)
-        {
-            info.guiIndex = possibleIndex;
-        }
-        */
-    }
-
     engine.update(info);
 
     if (!info.mouseActive)
@@ -82,15 +68,13 @@ void EditorCore::draw(sf::RenderWindow& window)
         }
     }
 
-
     if (info.hardReset)
     {
         info.hardReset = false;
         return;
     }
 
-
-    engine.renderMap(window);
+    engine.renderMap(window,info.showSolidBlocks);
 
     if (info.showLines)
     {
@@ -98,9 +82,6 @@ void EditorCore::draw(sf::RenderWindow& window)
     }
 
     engine.drawGUI(window,info.activeInventory);
-
-    //gui.draw(window, nullptr, nullptr);
-
 }
 
 void EditorCore::events(sf::Event& sfEvent)

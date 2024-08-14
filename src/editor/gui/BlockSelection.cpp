@@ -26,15 +26,9 @@ static void createQuad(std::vector<sf::Vertex>& vertices, float xPos, float yPos
     vertices.push_back(quad[3]);
 }
 
-
-
 int BlockSelection::select(sf::Vector2i& mousePosition)
 {
     sf::Vector2f mousePosFloat(mousePosition.x, mousePosition.y);
-
-   
-
-
 
     if (!adjustedBounds.contains(mousePosFloat))
     {
@@ -48,7 +42,6 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
     localMousePos.x -= cornerOffset;
     localMousePos.y -= cornerOffset;
 
-    //float visibleYPos = localMousePos.y + currentOffset * tileSize.y;
     float visibleYPos = localMousePos.y + currentOffset * (tileSize.y + spacing);
 
     int column = static_cast<int>(localMousePos.x / (tileSize.x + spacing));
@@ -63,11 +56,9 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
 
     if (blockIndex >= 0 && blockIndex < data.maxSpriteCount)
     {
-        //std::cout << "Selected block index: " << blockIndex << std::endl;
         return blockIndex;
     }
 
-    //std::cerr << "Amogus??: " << blockIndex << std::endl;
     return -1;
 }
 
@@ -85,14 +76,9 @@ void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animatio
 }
 
 
-
-//Tee t‰st‰ sillee ett‰ voit heitt‰‰ vaa uuden bufferin
 void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vector2i>* animationStartIndices)
 {
-    
-
     const sf::Vector2f bgSize = background.getSize();
-
 
     const float bgWidth = bgSize.x;
     const float bgHeight = bgSize.y;
@@ -303,13 +289,6 @@ void BlockSelection::draw(sf::RenderTarget& target)
     {
         target.draw(this->displayTabText[i]);
     }
-
-    
-	//if tab blocks
-	//target.draw(staticBlockBuffer);
-
-	//else
-	//target.draw(animatedBlockBuffer);
 }
 
 void BlockSelection::updateScrollOffset(int& offset)

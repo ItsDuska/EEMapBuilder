@@ -136,7 +136,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\animation\AnimationHandler.cpp" />
     <ClCompile Include="src\animation\AnimationCache.cpp" />
+    <ClCompile Include="src\chunk\ChunkUtils.cpp" />
     <ClCompile Include="src\editor\gui\BlockSelection.cpp" />
     <ClCompile Include="src\chunk\ChunkHandler.cpp" />
     <ClCompile Include="src\editor\EditorEngine.cpp" />
@@ -144,9 +146,13 @@
     <ClCompile Include="src\front\Application.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\editor\UndoStack.cpp" />
+    <ClCompile Include="src\world\WorldHandler.cpp" />
+    <ClCompile Include="src\chunk\VBOHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\animation\AnimationHandler.h" />
     <ClInclude Include="src\animation\AnimationCache.h" />
+    <ClInclude Include="src\chunk\ChunkUtils.h" />
     <ClInclude Include="src\editor\gui\BlockSelection.h" />
     <ClInclude Include="src\chunk\ChunkData.h" />
     <ClInclude Include="src\chunk\ChunkHandler.h" />
@@ -154,6 +160,8 @@
     <ClInclude Include="src\editor\EditorCore.h" />
     <ClInclude Include="src\front\Application.h" />
     <ClInclude Include="src\editor\UndoStack.h" />
+    <ClInclude Include="src\world\WorldHandler.h" />
+    <ClInclude Include="src\chunk\VBOHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\shader.frag" />

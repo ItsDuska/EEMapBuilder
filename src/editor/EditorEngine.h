@@ -4,9 +4,13 @@
 #include <iostream>
 #include <string>
 
+#include "world/WorldHandler.h"
+
 #include "chunk/ChunkHandler.h"
 #include "editor/gui/BlockSelection.h"
 #include "UndoStack.h"
+
+
 
 
 /*
@@ -77,6 +81,15 @@ struct ChunkPositions
 };
 
 
+
+/*
+
+Siirr‰ palikan laittaminen ja inspectaaminen sek‰ undo homma omaan classiin.
+ehk‰‰?
+
+*/
+
+
 class EditorEngine
 {
 public:
@@ -87,7 +100,7 @@ public:
 	void hardReset();
 
 	void drawGUI(sf::RenderTarget& window, bool enableInventoryRendering);
-	void renderMap(sf::RenderTarget& window);
+	void renderMap(sf::RenderTarget& window, bool showVisibility);
 
 	void executeUndoAction(sf::Vector2i& offset);
 	void executeRedoAction(sf::Vector2i& offset);
@@ -99,8 +112,8 @@ public:
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex, bool isSolid);
-	void addEntity(); //TODO:
-	void deleteEntity(); //TODO:
+	//void addEntity(); //TODO:
+	//void deleteEntity(); //TODO:
 	void addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex, bool isSolid);
 
@@ -116,46 +129,28 @@ private:
 
 	void updateTextDisplay(EventInfo& info);
 
-	int getAnimatedIndex(int index);
+	int getAnimatedIndex(int index, AnimationCache& cache);
 
 
 private:
-	std::unique_ptr<chunk::ChunkHandler> handler;
-
-
+	std::unique_ptr <EditorHandler> editorHandler;
 
 	sf::Vector2f windowSize;
-	sf::RenderStates states;
-	sf::Texture texture;
-	sf::Texture animatedTexture;
 	sf::Texture layeredObjectsTexture;
 
-
-	sf::RenderStates animatedRenderStates;
-
 	sf::Vector2f tileSize;
-
 	sf::Vector2i lastPosition;
-
 	sf::Sprite currentTexture;
-
-	sf::Vector2f textureSize;
-	sf::Vector2i animatedTextureSize;
-	sf::Vector2u spriteSheetSize;
+	sf::Vector2f spritePixelSize;
 
 	sf::Vector2i currentTexCoord;
 	sf::Vector2f currentMousePosition;
 
 	sf::Vector2f viewOffset;
-	int sheetWidthInTiles;
 
 	int spritesPerRow;
 	int spritesPerColumn;
 	int totalSprites;
-
-	int totalAnimatedSprites;
-
-	sf::Shader shader;
 
 	sf::Font font;
 	sf::Text infoText;
@@ -165,13 +160,12 @@ private:
 	std::string fileName;
 
 	sf::RectangleShape currentSpriteHolderBox;
-
 	UndoStack undoStack;
-
 	int lastIndex;
 
 	//Inventory
 	BlockSelection gui;
+	EditorCreationInfo info;
 
 };
 

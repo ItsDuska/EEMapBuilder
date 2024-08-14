@@ -5,23 +5,21 @@
 #include <cstdlib> // rand() ja srand()
 #include <ctime> // time()
 
+#include "chunk/ChunkUtils.h"
+
 constexpr uint32_t TILEMAP_SIZE = 32u*32u;
 constexpr uint32_t TILEMAP_WIDTH = 32u;
-
 
 
 static int getRandomNumberInRange(int min, int max) {
 	return min + std::rand() % (max - min + 1);
 }
 
-
-
-int EditorEngine::getAnimatedIndex(int index)
+int EditorEngine::getAnimatedIndex(int index,AnimationCache& cache)
 {
-	int total = handler->getAnimationCacheMaxSprites(); // 2
+	int total = cache.getMaxSprites();
 	index = (index % total + total) % total;
 	return std::max(index,1);
-	//return index;
 }
 
 BlockSelection& EditorEngine::getInventory()
@@ -29,44 +27,28 @@ BlockSelection& EditorEngine::getInventory()
 	return gui;
 }
 
-
 EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	: undoStack(20)
 {
 	this->windowSize = windowSize;
 	this->tileSize = tileSize;
 	lastPosition = {};
-	textureSize = { 16.f,16.f };
+	spritePixelSize = { 16.f,16.f };
 	currentTexCoord = {};
 	currentMousePosition = {};
-	sheetWidthInTiles = 0;
 
 	lastIndex = -5;
 	std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-	handler = std::make_unique<chunk::ChunkHandler>();
+	info.spritePixelSize = spritePixelSize;
+	info.tileSize = tileSize;
+	info.staticSpriteSheetTexturePath = "data/texture/Tuukka.png";
+	info.animatedSpriteSheetTexturePath = "data/texture/Olli.png";
+	info.objectSpriteSheetTexturePath = "guhhhhhhh....";
+	info.layeredSpriteSheetTexturePath = "data/texture/Pietari.png";
 
-	std::string spriteSheet = "data/texture/Tuukka.png";
-	if (!texture.loadFromFile(spriteSheet))
-	{
-		std::cerr << "ERROR: Can't open texture!\n";
-		return;
-	}
-	states.texture = &texture;
-
-	std::string animatedSpriteSheet = "data/texture/Olli.png";
-	if (!animatedTexture.loadFromFile(animatedSpriteSheet))
-	{
-		std::cerr << "ERROR: Can't open texture!\n";
-		return;
-	}
-	animatedRenderStates.texture = &animatedTexture;
-
-	animatedTextureSize = {
-		static_cast<int>(animatedTexture.getSize().x),
-		static_cast<int>(animatedTexture.getSize().y)
-	};
-
+	editorHandler = std::make_unique<EditorHandler>(info);
+	spritesPerRow = editorHandler->getVBOHandler().getSpriteSheetSizeInTiles().x;
 
 	std::string layeredSpriteSheetPath = "data/texture/Pietari.png";
 	if (!layeredObjectsTexture.loadFromFile(layeredSpriteSheetPath))
@@ -74,39 +56,11 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 		std::cerr << "ERROR: Can't open texture!\n";
 		return;
 	}
-	//animatedRenderStates.texture = &animatedTexture;
 
-
-
-	currentTexture.setTexture(texture);
+	currentTexture.setTexture(editorHandler->getVBOHandler().getTexture());
 	currentTexture.setScale(sf::Vector2f(4.f, 4.f));
-	sf::IntRect rect(0, 0, textureSize.x,textureSize.y);
+	sf::IntRect rect(0, 0, spritePixelSize.x,spritePixelSize.y);
 	currentTexture.setTextureRect(rect);
-
-
-
-	spriteSheetSize = texture.getSize();
-	sheetWidthInTiles = spriteSheetSize.x / textureSize.x;
-	const int sheetHeightInTiles = spriteSheetSize.y / textureSize.y;
-
-	handler->setAssetSizes(tileSize, textureSize,sheetWidthInTiles,animatedTextureSize);
-
-	spritesPerRow = spriteSheetSize.x / textureSize.x;
-	spritesPerColumn = spriteSheetSize.y / textureSize.y;
-	totalSprites = spritesPerRow * spritesPerColumn;
-
-
-	const int animatedSpritesPerRow = animatedTexture.getSize().x / animatedTextureSize.x;
-	const int animatedSpritesPerColumn = animatedTexture.getSize().y / animatedTextureSize.y;
-	totalAnimatedSprites = animatedSpritesPerColumn * animatedSpritesPerRow; // T‰‰ on v‰‰r‰‰ tietoo, heit‰ t‰‰ veks
-
-
-	if (!shader.loadFromFile("src/shaders/shader.vert", "src/shaders/shader.frag"))
-	{
-		std::cerr << "ERROR: Can't load shaders!\n";
-	}
-
-	states.shader = &shader;
 
 
 	if (!font.loadFromFile("data/fonts/DotGothic16-Regular.ttf"))
@@ -122,7 +76,6 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	EventInfo nullInfo{};
 	updateTextDisplay(nullInfo);
 
-	
 	currentTexture.setPosition(4.f, infoText.getGlobalBounds().height*1.2f);
 	currentSpriteHolderBox.setPosition(currentTexture.getPosition().x-5,currentTexture.getPosition().y - currentTexture.getGlobalBounds().height / 10);
 	currentSpriteHolderBox.setOrigin(currentTexture.getOrigin());
@@ -131,41 +84,35 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentSpriteHolderBox.setScale(1.2f, 1.2f);
 	currentSpriteHolderBox.setFillColor(sf::Color(0,0,0,50));
 
-
-	const int layerSpritesPerRow = layeredObjectsTexture.getSize().x / textureSize.x;
-	const int layerSpritesPerColumn = layeredObjectsTexture.getSize().y / textureSize.y;
+	const int layerSpritesPerRow = layeredObjectsTexture.getSize().x / spritePixelSize.x;
+	const int layerSpritesPerColumn = layeredObjectsTexture.getSize().y / spritePixelSize.y;
 	const int layerTotalSprites = layerSpritesPerRow * layerSpritesPerColumn;
-
 
 	sf::Texture* texturePtrs[MAX_TAB_COUNT] =
 	{
-		&texture,
-		&animatedTexture,
+		&editorHandler->getVBOHandler().getTexture(),
+		&editorHandler->getAnimationHandler().getTexture(),
 		nullptr,
 		&layeredObjectsTexture
 	};
 
+	VBOHandler &vbo = editorHandler->getVBOHandler();
+
+	AnimationHandler& animationHandler = editorHandler->getAnimationHandler();
+
+	int staticTotalSprites = vbo.getSpriteSheetSizeInTiles().x * vbo.getSpriteSheetSizeInTiles().y;
 
 	PackedTabInformation packedInfo[MAX_TAB_COUNT] =
 	{
-		{totalSprites,{sheetHeightInTiles,sheetHeightInTiles}},
-		{handler->getAnimationCache().getMaxSprites(), {animatedSpritesPerRow,animatedSpritesPerColumn}},
+		{staticTotalSprites, vbo.getSpriteSheetSizeInTiles()},
+		{animationHandler.getAnimationCache().getMaxSprites(), animationHandler.getSpriteSheetSizeInTiles()},
 		{NULL,{NULL,NULL}},
-		{layerTotalSprites,{layerSpritesPerRow,layerSpritesPerColumn}}
+		{layerTotalSprites, {layerSpritesPerRow,layerSpritesPerColumn}}
 	};
 
-	sf::Vector2i tempSize(textureSize.x, textureSize.y);
-	//gui.awake(windowSize, tempSize,totalSprites,
-		//handler->getAnimationCache().getMaxSprites(), tileSize, sheetWidthInTiles,
-		//animatedSpritesPerRow, sheetHeightInTiles, animatedSpritesPerColumn,font,texturePtrs);
-
+	sf::Vector2i tempSize(spritePixelSize.x, spritePixelSize.y);
 	gui.awake(windowSize, tempSize, tileSize, packedInfo, font, texturePtrs);
-
-	//gui.constructElements(nullptr);
-	gui.constructElements(handler->getAnimationCache().getStartPositionsPtr());
-	
-
-
+	gui.constructElements(editorHandler->getAnimationHandler().getAnimationCache().getStartPositionsPtr());
 }
 
 void EditorEngine::createMap(std::string& filename)
@@ -173,26 +120,23 @@ void EditorEngine::createMap(std::string& filename)
 	if (std::filesystem::exists(filename))
 	{
 		this->fileName = filename;
-		handler->loadFromFile(filename);
+		editorHandler->getChunkHandler().loadFromFile(filename);
 	}
 }
 
-
 void EditorEngine::update(EventInfo& info)
 {
-	sf::IntRect rect(currentTexCoord.x*this->textureSize.x, currentTexCoord.y* this->textureSize.x,
-		this->textureSize.x, this->textureSize.y);
+	sf::IntRect rect(currentTexCoord.x*this->spritePixelSize.x, currentTexCoord.y* this->spritePixelSize.x,
+		this->spritePixelSize.x, this->spritePixelSize.y);
 	currentTexture.setTextureRect(rect);
 	
 
 	viewOffset = { info.offset.x * tileSize.x, info.offset.y * tileSize.y };
 
-	currentMousePosition = {((info.offset.x+textureSize.x) * tileSize.x),
-		((info.offset.y+textureSize.y) * tileSize.y) };
+	currentMousePosition = {((info.offset.x+spritePixelSize.x) * tileSize.x),
+		((info.offset.y+spritePixelSize.y) * tileSize.y) };
 
-	handler->update(currentMousePosition);
-
-	shader.setUniform("solidBlockVisibility", static_cast<float>(info.showSolidBlocks));
+	editorHandler->update(currentMousePosition);
 
 	if (info.hardReset)
 	{
@@ -208,30 +152,27 @@ void EditorEngine::update(EventInfo& info)
 	}
 	clock.restart();
 
-
 	int possibleFutureBlockTextureIndex = 0;
-
-
 	int guiCurrentTextureIndex = 0;
 
+	AnimationCache& cache = editorHandler->getAnimationHandler().getAnimationCache();
+	
 	switch (info.currentTab)
 	{
 	case 0:
-		
-		//updatedIndex = (info.guiIndex % totalSprites + totalSprites) % totalSprites;
 		possibleFutureBlockTextureIndex = info.guiIndex;
 		guiCurrentTextureIndex = possibleFutureBlockTextureIndex;
 
-		currentTexture.setTexture(texture);
+		currentTexture.setTexture(editorHandler->getVBOHandler().getTexture());
 		break;
 	case 1:
-		currentTexture.setTexture(animatedTexture);
+		currentTexture.setTexture(editorHandler->getAnimationHandler().getTexture());
 		
-		possibleFutureBlockTextureIndex = this->getAnimatedIndex(info.guiIndex);
+		possibleFutureBlockTextureIndex = this->getAnimatedIndex(info.guiIndex, cache);
 
-		info.guiIndex = info.guiIndex % handler->getAnimationCacheMaxSprites();
+		info.guiIndex = info.guiIndex % cache.getMaxSprites();
 		
-		guiCurrentTextureIndex = handler->getAnimationCacheStartingIndex(possibleFutureBlockTextureIndex);
+		guiCurrentTextureIndex = cache.getStartPosition(possibleFutureBlockTextureIndex);
 		break;
 	default:
 		break;
@@ -239,7 +180,6 @@ void EditorEngine::update(EventInfo& info)
 
 	currentTexCoord.x = guiCurrentTextureIndex % spritesPerRow;
 	currentTexCoord.y = guiCurrentTextureIndex / spritesPerRow;
-
 
 	if (info.activeInventory)
 	{
@@ -251,8 +191,6 @@ void EditorEngine::update(EventInfo& info)
 
 		return;
 	}
-
-
 
 	switch (info.mode)
 	{
@@ -270,9 +208,7 @@ void EditorEngine::update(EventInfo& info)
 		default:
 			break;
 		}
-			
-		
-		
+				
 		break;
 	case EditMode::DELETE:
 		switch (info.currentTab)
@@ -294,13 +230,14 @@ void EditorEngine::update(EventInfo& info)
 		break;
 	}
 
-	handler->UpdateVATexCoords();
+	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
+	editorHandler->getAnimationHandler().UpdateVATexCoords(chunkHandle);
 }
 
 void EditorEngine::saveMap(std::string& filename)
 {
 	const auto start = std::chrono::high_resolution_clock::now();
-	handler->saveToFile(filename);
+	editorHandler->getChunkHandler().saveToFile(filename);
 	const auto end = std::chrono::high_resolution_clock::now();
 
 	const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -312,15 +249,16 @@ void EditorEngine::hardReset()
 {
 	undoStack.destroyBuffers();
 
-	handler.reset();
+	editorHandler.reset();
 
 	// Tuhoo tiedosto.
 	if (std::filesystem::remove(fileName))
 	{
 		std::cout << "guh???\n";
 	}
-	handler = std::make_unique<chunk::ChunkHandler>();
-	handler->setAssetSizes(tileSize, textureSize, sheetWidthInTiles,animatedTextureSize);
+
+	editorHandler = std::make_unique<EditorHandler>(info);
+
 	createMap(fileName);
 }
 
@@ -336,7 +274,7 @@ void EditorEngine::drawGUI(sf::RenderTarget& window,bool enableInventoryRenderin
 	}
 }
 
-void EditorEngine::renderMap(sf::RenderTarget& window)
+void EditorEngine::renderMap(sf::RenderTarget& window,bool showVisibility)
 {
 	sf::View view = window.getDefaultView();
 	sf::Vector2f newView = view.getCenter();
@@ -344,7 +282,8 @@ void EditorEngine::renderMap(sf::RenderTarget& window)
 	view.setCenter(newView);
 
 	window.setView(view);
-	handler->renderActiveChunks(window, states, animatedRenderStates);
+	editorHandler->render(window, showVisibility);
+
 	window.setView(window.getDefaultView());
 	
 }
@@ -389,10 +328,9 @@ void EditorEngine::executeRedoAction(sf::Vector2i& offset)
 
 void EditorEngine::resetAnimationRandomness()
 {
-	handler->resetAnimationRandomness();
+	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
+	editorHandler->getAnimationHandler().resetAnimationRandomness(chunkHandle);
 }
-
-
 
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 	const int guiIndex, bool isSolid)
@@ -425,8 +363,11 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 
 	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
 
-	ChunkData* chunkData = handler->getChunk(chunkPosition);
-	sf::VertexBuffer* buffer = handler->getBuffer(chunkPosition);
+	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
+	ChunkData* chunkData = chunkHandle.getChunk(chunkPosition);
+	//TODO: Tee WorldHandler tiedostoon funktio bufferin saamiseen. Helponnus funktio
+	const int chunkIndex = chunkHandle.chunkInActiveMemory(chunkPosition);
+	sf::VertexBuffer* buffer = editorHandler->getVBOHandler().getBufferPtr(chunkIndex);
 
 
 	if (chunkData == nullptr || buffer == nullptr)
@@ -488,15 +429,16 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 		currentTexCoord.y = 0;
 	}
 
-	sf::Vector2i a = handler->getAnimatedTextureCoord(guiIndex);
-
-	std::vector<AnimationTile>& tiles = handler->getAnimationTileDataBuffer(chunkPosition.x, chunkPosition.y);
-
 
 	sf::Vector2<std::uint8_t> inChunk(
 		static_cast<std::uint8_t>(positionInGrid.x),
 		static_cast<std::uint8_t>(positionInGrid.y)
 	);
+
+	auto& chunkHandler = editorHandler->getChunkHandler();
+
+	std::vector<AnimationTile>& tiles = chunkHandler.getEditorSideData(chunkPosition.x, chunkPosition.y)->animations;
+	
 
 	bool updated = false;
 
@@ -520,7 +462,7 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 		tiles.push_back(newTile);
 	}
 
-	handler->constrcuctAnimatedTiles();
+	editorHandler->getAnimationHandler().constrcuctAnimatedTiles(chunkHandler);
 	lastPosition = newPosition;
 }
 
@@ -543,8 +485,9 @@ int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
 	);
 
 	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
-	ChunkData* chunkData = handler->getChunk(chunkPosition);
 
+	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
+	ChunkData* chunkData = chunkHandle.getChunk(chunkPosition);
 
 	if (chunkData == nullptr)
 	{
@@ -574,15 +517,17 @@ void EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector
 	positions.positionInWorld = newPosition;
 	positions.chunkPosition = chunkPosition;
 	positions.positionInChunk = positionInGrid;
-
 }
 
 void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::Vector2i& chunkPosition, const sf::Vector2i& positionInChunk, const int textureIndex, const bool solidMode)
 {
 	const int index = positionInChunk.y * TILEMAP_WIDTH + positionInChunk.x;
 
-	ChunkData* chunkData = handler->getChunk(chunkPosition);
-	sf::VertexBuffer* buffer = handler->getBuffer(chunkPosition);
+	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
+	ChunkData* chunkData = chunkHandle.getChunk(chunkPosition);
+
+	const int chunkIndex = chunkHandle.chunkInActiveMemory(chunkPosition);
+	sf::VertexBuffer* buffer = editorHandler->getVBOHandler().getBufferPtr(chunkIndex);
 
 	if (chunkData == nullptr || buffer == nullptr)
 	{
@@ -605,13 +550,11 @@ void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::V
 
 
 	sf::Vertex quad[4];
-	chunk::addQuadVertices(quad,vertPosition, currentTexCoord, tileSize, textureSize, solidMode);
+	chunk::addQuadVertices(quad,vertPosition, currentTexCoord, tileSize, spritePixelSize, solidMode);
 	size_t vertexOffset = static_cast<size_t>(index) * 4;
 	buffer->update(quad, 4, vertexOffset);
 
 	lastPosition = vertPosition;
-
-	//std::cout << lastPosition.x << "x | " << lastPosition.y << "y\n";
 }
 
 void EditorEngine::updateTextDisplay(EventInfo& info)

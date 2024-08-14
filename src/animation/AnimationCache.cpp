@@ -82,7 +82,8 @@ int AnimationCache::getStartPosition(int index)
         return 0;
     }
     sf::Vector2i position = startPositions[index];
-    //std::cout << position.x << "x " << position.y << "y\n";
+    //
+    // << position.x << "x " << position.y << "y\n";
     int a = (position.y * widthInTiles + position.x);
     //std::cout << a << "\n";
     return a; // Palautetaan aloitusindeksi
