@@ -76,6 +76,7 @@ void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animatio
     constructVBO(guiElements[0],nullptr);
     constructVBO(guiElements[1], animationStartIndices);
 
+    constructVBO(guiElements[3], nullptr);
     // construct objects...
     // construct layered blocks...
 
@@ -151,8 +152,8 @@ void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vec
                 }
                    
 
-                int texX = ((currentTextureIndex-1) % data.sizeInTiles.x) * blockSize.x;
-                int texY = ((currentTextureIndex-1) / data.sizeInTiles.x) * blockSize.y;
+                int texX = ((currentTextureIndex - 1) % data.sizeInTiles.x) * blockSize.x;
+                int texY = ((currentTextureIndex - 1) / data.sizeInTiles.x) * blockSize.y;
 
                 float xPos = backgroundOffsetPosition.x + cornerOffset + j * blockWithSpacingWidth;
                 createQuad(vertices, xPos, yPos, texX, texY, tileSize, blockSize);
@@ -243,13 +244,8 @@ GUIBufferData& BlockSelection::getCurrentElementData()
 
 void BlockSelection::awake(sf::Vector2f& windowSize,
     sf::Vector2i& blockSize,
-    int maxStaticTextures,
-    int maxAniamatedTextures,
     sf::Vector2f& tileSize,
-    int staticTextureWidth,
-    int animatedTextuereWidth,
-    int staticTextureHeight,
-    int animatedTextuereHeight,
+    PackedTabInformation* packedTabs,
     sf::Font& font,
     sf::Texture** textures)
 {
@@ -268,13 +264,13 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
     setupBackground(windowSize);
 
     // Static Blocks
-    guiElements[0].maxSpriteCount = maxStaticTextures;
-    guiElements[0].sizeInTiles = { staticTextureWidth,staticTextureHeight };
+    guiElements[0].maxSpriteCount = packedTabs[0].maxSpriteCount;
+    guiElements[0].sizeInTiles = packedTabs[0].sizeInTiles;
     guiElements[0].texturePtr = textures[0];
 
     // Animated Blocks
-    guiElements[1].maxSpriteCount = maxAniamatedTextures;
-    guiElements[1].sizeInTiles = { animatedTextuereWidth,animatedTextuereHeight };
+    guiElements[1].maxSpriteCount = packedTabs[1].maxSpriteCount;
+    guiElements[1].sizeInTiles = packedTabs[1].sizeInTiles;
     guiElements[1].texturePtr = textures[1];
 
     // Objects...
@@ -282,6 +278,10 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
 
     // Layered Blocks...
     // data here...
+    guiElements[3].maxSpriteCount = packedTabs[3].maxSpriteCount;
+    guiElements[3].sizeInTiles = packedTabs[3].sizeInTiles;
+    guiElements[3].texturePtr = textures[3];
+
     constructGUIText(font);
 
 

@@ -15,18 +15,20 @@ struct GUIBufferData
 };
 
 
+struct PackedTabInformation
+{
+	int maxSpriteCount;
+	sf::Vector2i sizeInTiles;
+};
+
+
 class BlockSelection
 {
 public:
 	void awake(sf::Vector2f& windowSize,
 		sf::Vector2i& blockSize,
-		int maxStaticTextures,
-		int maxAniamatedTextures,
 		sf::Vector2f& tileSize,
-		int staticTextureWidth,
-		int animatedTextuereWidth,
-		int staticTextureHeight,
-		int animatedTextuereHeight,
+		PackedTabInformation* packedTabs,
 		sf::Font& font,sf::Texture** textures);
 
 	void draw(sf::RenderTarget& target);
@@ -69,7 +71,7 @@ private:
 
 	sf::VertexBuffer staticBlockBuffer;
 
-	sf::VertexArray animatedBlockBuffer;
+	//sf::VertexArray animatedBlockBuffer;
 
 	sf::RenderStates globalGUIrenderStates;
 

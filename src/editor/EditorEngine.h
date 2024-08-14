@@ -128,6 +128,8 @@ private:
 	sf::RenderStates states;
 	sf::Texture texture;
 	sf::Texture animatedTexture;
+	sf::Texture layeredObjectsTexture;
+
 
 	sf::RenderStates animatedRenderStates;
 

@@ -67,6 +67,17 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 		static_cast<int>(animatedTexture.getSize().y)
 	};
 
+
+	std::string layeredSpriteSheetPath = "data/texture/Pietari.png";
+	if (!layeredObjectsTexture.loadFromFile(layeredSpriteSheetPath))
+	{
+		std::cerr << "ERROR: Can't open texture!\n";
+		return;
+	}
+	//animatedRenderStates.texture = &animatedTexture;
+
+
+
 	currentTexture.setTexture(texture);
 	currentTexture.setScale(sf::Vector2f(4.f, 4.f));
 	sf::IntRect rect(0, 0, textureSize.x,textureSize.y);
@@ -121,20 +132,34 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentSpriteHolderBox.setFillColor(sf::Color(0,0,0,50));
 
 
-	sf::Texture* texturePtrs[4] =
+	const int layerSpritesPerRow = layeredObjectsTexture.getSize().x / textureSize.x;
+	const int layerSpritesPerColumn = layeredObjectsTexture.getSize().y / textureSize.y;
+	const int layerTotalSprites = layerSpritesPerRow * layerSpritesPerColumn;
+
+
+	sf::Texture* texturePtrs[MAX_TAB_COUNT] =
 	{
 		&texture,
 		&animatedTexture,
 		nullptr,
-		nullptr
+		&layeredObjectsTexture
 	};
 
 
-	
+	PackedTabInformation packedInfo[MAX_TAB_COUNT] =
+	{
+		{totalSprites,{sheetHeightInTiles,sheetHeightInTiles}},
+		{handler->getAnimationCache().getMaxSprites(), {animatedSpritesPerRow,animatedSpritesPerColumn}},
+		{NULL,{NULL,NULL}},
+		{layerTotalSprites,{layerSpritesPerRow,layerSpritesPerColumn}}
+	};
 
 	sf::Vector2i tempSize(textureSize.x, textureSize.y);
-	gui.awake(windowSize, tempSize,totalSprites, handler->getAnimationCache().getMaxSprites(), tileSize, sheetWidthInTiles,
-		animatedSpritesPerRow, sheetHeightInTiles, animatedSpritesPerColumn,font,texturePtrs);
+	//gui.awake(windowSize, tempSize,totalSprites,
+		//handler->getAnimationCache().getMaxSprites(), tileSize, sheetWidthInTiles,
+		//animatedSpritesPerRow, sheetHeightInTiles, animatedSpritesPerColumn,font,texturePtrs);
+
+	gui.awake(windowSize, tempSize, tileSize, packedInfo, font, texturePtrs);
 
 	//gui.constructElements(nullptr);
 	gui.constructElements(handler->getAnimationCache().getStartPositionsPtr());
