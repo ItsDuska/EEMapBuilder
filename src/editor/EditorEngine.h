@@ -119,7 +119,6 @@ private:
 
 	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
 
-
 	void calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset);
 
 	void updateVBOAndMap(const sf::Vector2i& vertPosition,
@@ -130,40 +129,28 @@ private:
 	void updateTextDisplay(EventInfo& info);
 
 	int getAnimatedIndex(int index, AnimationCache& cache);
-
-
 private:
 	std::unique_ptr <EditorHandler> editorHandler;
-
 	sf::Vector2f windowSize;
 	sf::Texture layeredObjectsTexture;
-
 	sf::Vector2f tileSize;
-	sf::Vector2i lastPosition;
+	sf::Vector2i lastPosition;                             
 	sf::Sprite currentTexture;
 	sf::Vector2f spritePixelSize;
-
 	sf::Vector2i currentTexCoord;
 	sf::Vector2f currentMousePosition;
-
 	sf::Vector2f viewOffset;
-
 	int spritesPerRow;
 	int spritesPerColumn;
 	int totalSprites;
-
 	sf::Font font;
 	sf::Text infoText;
 	std::string rawText;
-
 	sf::Clock clock;
 	std::string fileName;
-
 	sf::RectangleShape currentSpriteHolderBox;
 	UndoStack undoStack;
 	int lastIndex;
-
-	//Inventory
 	BlockSelection gui;
 	EditorCreationInfo info;
 

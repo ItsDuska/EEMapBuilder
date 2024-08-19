@@ -21,19 +21,9 @@ struct ChunkData
 	uint32_t solidBlockData[CHUNK_SIZE]; 
 	BufferView entityBuffer;
 	BufferView animatedTileBuffer;
+	BufferView layeredTilesBuffer;
+
 };
-
-
-struct EntityTile
-{
-	sf::Vector2<uint8_t> position;
-	uint16_t type; // Esimerkkin‰ ovi, joka vie toiseen huoneeseen. 1 voi olla ovi, 2 kyltti ja jne...
-	uint16_t actionId; //Esim huoneen id johon ovi voi vide‰ tai vaikkapa kyltin tekstin indeksi listaan, joka on p‰in vattua.
-	uint16_t textureID; //duh itsess‰‰n selv‰ jo.
-	uint8_t frameCount; // kuinka monta animaatio framea on. 0 jos ei ole kuvaa. 1 jos on staattinen objekti.
-	float animationSpeed;
-};
-
 
 struct AnimationTile
 {
@@ -44,15 +34,18 @@ struct AnimationTile
 	uint16_t elapsedFrames;
 };
 
-
-
-
-struct NewEntityTile // Oikea versio siit‰. Vanha poistetaan pian ja t‰‰ tulee sen tilalle
+struct EntityTile // Oikea versio siit‰. Vanha poistetaan pian ja t‰‰ tulee sen tilalle
 {
 	AnimationTile animation; // Animaatio tavarat. Ei ole pakosti
 	uint16_t type; // Esimerkkin‰ ovi, joka vie toiseen huoneeseen. 1 voi olla ovi, 2 kyltti ja jne...
 	uint16_t actionId; //Esim huoneen id johon ovi voi vide‰ tai vaikkapa kyltin tekstin indeksi listaan, joka on p‰in vattua.
+};
 
+
+struct LayeredStaticTile
+{
+	sf::Vector2<uint8_t> positionInChunk;
+	uint16_t textureID;
 };
 
 

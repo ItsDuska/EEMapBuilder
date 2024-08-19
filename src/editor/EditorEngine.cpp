@@ -363,12 +363,8 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 
 	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
 
-	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
-	ChunkData* chunkData = chunkHandle.getChunk(chunkPosition);
-	//TODO: Tee WorldHandler tiedostoon funktio bufferin saamiseen. Helponnus funktio
-	const int chunkIndex = chunkHandle.chunkInActiveMemory(chunkPosition);
-	sf::VertexBuffer* buffer = editorHandler->getVBOHandler().getBufferPtr(chunkIndex);
-
+	ChunkData* chunkData = editorHandler->getChunkData(chunkPosition);
+	sf::VertexBuffer* buffer = editorHandler->getVBOPtr(chunkPosition);
 
 	if (chunkData == nullptr || buffer == nullptr)
 	{
@@ -486,8 +482,7 @@ int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
 
 	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
 
-	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
-	ChunkData* chunkData = chunkHandle.getChunk(chunkPosition);
+	ChunkData* chunkData = editorHandler->getChunkData(chunkPosition);
 
 	if (chunkData == nullptr)
 	{
@@ -523,11 +518,10 @@ void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::V
 {
 	const int index = positionInChunk.y * TILEMAP_WIDTH + positionInChunk.x;
 
-	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
-	ChunkData* chunkData = chunkHandle.getChunk(chunkPosition);
+	
+	ChunkData* chunkData = editorHandler->getChunkData(chunkPosition);
 
-	const int chunkIndex = chunkHandle.chunkInActiveMemory(chunkPosition);
-	sf::VertexBuffer* buffer = editorHandler->getVBOHandler().getBufferPtr(chunkIndex);
+	sf::VertexBuffer* buffer = editorHandler->getVBOPtr(chunkPosition);
 
 	if (chunkData == nullptr || buffer == nullptr)
 	{

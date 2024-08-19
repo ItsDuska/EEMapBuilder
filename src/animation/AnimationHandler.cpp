@@ -13,7 +13,6 @@ AnimationHandler::AnimationHandler(std::string& animationFileName, sf::Vector2f&
 {
 	vaTiles.setPrimitiveType(sf::Quads);
 
-
     if (!texture.loadFromFile(animationFileName))
     {
         std::cerr << "ERROR: Can't open texture!\n";
@@ -153,7 +152,6 @@ void AnimationHandler::UpdateVATexCoords(chunk::ChunkHandler& handler)
             {
                 continue;
             }
-
 
             totalQuads++;
 

@@ -4,8 +4,7 @@ EditorHandler::EditorHandler(EditorCreationInfo& info)
     : vboHandler(info.staticSpriteSheetTexturePath,info.spritePixelSize),
     animationHandler(info.animatedSpriteSheetTexturePath,info.spritePixelSize)
 {
-    chunkHandler = std::make_unique<chunk::ChunkHandler>();
-    chunkHandler->setAssetSizes(
+    chunkHandler.setAssetSizes(
         info.tileSize,
         info.spritePixelSize,
         vboHandler.getSpriteSheetSizeInTiles().x
@@ -15,9 +14,9 @@ EditorHandler::EditorHandler(EditorCreationInfo& info)
 
 void EditorHandler::update(sf::Vector2f& position)
 {
-	chunkHandler->update(position);
+	chunkHandler.update(position);
 
-	if (chunkHandler->needsUpdate())
+	if (chunkHandler.needsUpdate())
 	{
 		updateBuffers();
 	}
@@ -42,14 +41,23 @@ AnimationHandler& EditorHandler::getAnimationHandler()
 
 chunk::ChunkHandler& EditorHandler::getChunkHandler()
 {
-    return *chunkHandler.get();
+    return chunkHandler;
 }
 
+ChunkData* EditorHandler::getChunkData(const sf::Vector2i& position)
+{
+    return chunkHandler.getChunk(position);
+}
 
+sf::VertexBuffer* EditorHandler::getVBOPtr(const sf::Vector2i& position)
+{
+    const int chunkIndex = chunkHandler.chunkInActiveMemory(position);
+    return vboHandler.getBufferPtr(chunkIndex);
+}
 
 void EditorHandler::updateBuffers()
 {
-    std::vector<chunk::ChunkCreationTask>& tasks = chunkHandler->getChunkCreationTasks();
+    std::vector<chunk::ChunkCreationTask>& tasks = chunkHandler.getChunkCreationTasks();
 
     for (const chunk::ChunkCreationTask& task : tasks)
     {
@@ -58,14 +66,14 @@ void EditorHandler::updateBuffers()
             task.chunkCoord,
             task.hasTileMap,
             task.chunkData,
-            chunkHandler->getRenderSizes()
+            chunkHandler.getRenderSizes()
         );
     }
 
     tasks.clear();
 
 
-    std::vector<uint16_t>& deletionQueue = chunkHandler->getDeletionQueue();
+    std::vector<uint16_t>& deletionQueue = chunkHandler.getDeletionQueue();
     for (const uint16_t& index : deletionQueue)
     {
         vboHandler.removeBuffer(index);
@@ -73,6 +81,6 @@ void EditorHandler::updateBuffers()
 
     deletionQueue.clear();
     
-    animationHandler.constrcuctAnimatedTiles(*chunkHandler);
+    animationHandler.constrcuctAnimatedTiles(chunkHandler);
 
 }

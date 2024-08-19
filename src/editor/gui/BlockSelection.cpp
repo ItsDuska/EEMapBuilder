@@ -37,7 +37,6 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
 
     const GUIBufferData& data = getCurrentElementData();
 
-
     sf::Vector2f localMousePos = mousePosFloat - backgroundOffsetPosition;
     localMousePos.x -= cornerOffset;
     localMousePos.y -= cornerOffset;
@@ -52,7 +51,6 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
     {
         blockIndex++;
     }
-
 
     if (blockIndex >= 0 && blockIndex < data.maxSpriteCount)
     {
@@ -74,7 +72,6 @@ void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animatio
     updateScrollOffset(currentOffset);
 
 }
-
 
 void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vector2i>* animationStartIndices)
 {
@@ -117,7 +114,6 @@ void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vec
                     break;
                 }
                    
-
                 sf::Vector2i texPos = (*animationStartIndices)[blockIndex];
 
                 int texX = texPos.x * blockSize.x;
@@ -137,7 +133,6 @@ void BlockSelection::constructVBO(GUIBufferData& data, const std::vector<sf::Vec
                     break;
                 }
                    
-
                 int texX = ((currentTextureIndex - 1) % data.sizeInTiles.x) * blockSize.x;
                 int texY = ((currentTextureIndex - 1) / data.sizeInTiles.x) * blockSize.y;
 
@@ -227,7 +222,6 @@ GUIBufferData& BlockSelection::getCurrentElementData()
     return guiElements[currentTab];
 }
 
-
 void BlockSelection::awake(sf::Vector2f& windowSize,
     sf::Vector2i& blockSize,
     sf::Vector2f& tileSize,
@@ -269,9 +263,6 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
     guiElements[3].texturePtr = textures[3];
 
     constructGUIText(font);
-
-
-
     backgroundOffsetPosition = background.getPosition() + sf::Vector2f(0, this->displayTabText[0].getGlobalBounds().height * 1.25f);
 }
 
@@ -281,8 +272,6 @@ void BlockSelection::draw(sf::RenderTarget& target)
     globalGUIrenderStates.texture = data.texturePtr;
 
 	target.draw(background);
-
-    
     target.draw(getCurrentElementData().buffer, view.offset, view.count, globalGUIrenderStates);
 
     for (int i = 0; i < MAX_TAB_COUNT; i++)

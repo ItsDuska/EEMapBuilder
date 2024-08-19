@@ -16,8 +16,9 @@ namespace chunk
 		ChunkData rawData;
 		std::vector<EntityTile> entities;
 		std::vector<AnimationTile> animations;
+		std::vector<LayeredStaticTile> layeredTiles;
 		EditorSideChunkData()
-			: rawData(), entities(), animations()
+			: rawData(), entities(), animations(), layeredTiles()
 		{
 		}
 	};
@@ -27,6 +28,7 @@ namespace chunk
 		size_t chunks;
 		size_t entities;
 		size_t animations;
+		size_t layeredTiles;
 	};
 
 	struct RenderingSizes

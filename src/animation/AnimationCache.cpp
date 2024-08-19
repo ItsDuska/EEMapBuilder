@@ -72,7 +72,6 @@ sf::Vector2i AnimationCache::getAnimationFrame(int animationIndex, int frame) co
 std::vector<sf::Vector2i>* AnimationCache::getStartPositionsPtr()
 {
     return &startPositions;
-    // TODO: insert return statement here
 }
 
 int AnimationCache::getStartPosition(int index)
@@ -82,11 +81,7 @@ int AnimationCache::getStartPosition(int index)
         return 0;
     }
     sf::Vector2i position = startPositions[index];
-    //
-    // << position.x << "x " << position.y << "y\n";
-    int a = (position.y * widthInTiles + position.x);
-    //std::cout << a << "\n";
-    return a; // Palautetaan aloitusindeksi
+    return position.y * widthInTiles + position.x;
 }
 
 int AnimationCache::getMaxSprites()
@@ -105,7 +100,7 @@ int AnimationCache::getAnimationFrameCount(int animationIndex)
 
 void AnimationCache::precomputeStartPositions()
 {
-    startPositions.push_back(sf::Vector2i(0, 0)); // NULL Value.
+    startPositions.push_back(sf::Vector2i(NULL, NULL)); // NULL Value.
 
     int x = 16; 
     int y = 0;

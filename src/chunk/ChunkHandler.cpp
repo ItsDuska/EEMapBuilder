@@ -52,7 +52,6 @@ void chunk::ChunkHandler::addChunk(sf::Vector2i chunkPosition)
     task.chunkData = data;
     chunkTaskList.push_back(task);
 
-    //addVertexBuffer(chunkPosition, false);
     ChunkKey key = combineCoords(chunkPosition.x, chunkPosition.y);
     chunkMap[key] = chunks.size()-1; 
 }
@@ -62,7 +61,6 @@ void chunk::ChunkHandler::removeChunk(uint16_t index)
     if (index < activeChunks.size())
     {
         activeChunks.erase(activeChunks.begin() + index);
-        //vertexBuffers.erase(vertexBuffers.begin() + index);
     }
 }
 
@@ -71,7 +69,6 @@ void chunk::ChunkHandler::setAssetSizes(sf::Vector2f& tileSize, sf::Vector2f& te
     renderSizes.tileSize = tileSize;
     renderSizes.spritePixelSize = textureSize;
     renderSizes.totalChunkSize = {tileSize.x* CHUNK_SIZE,tileSize.y * CHUNK_SIZE };
-    //animationCache.awake({ 16,16 }, animatedTextureSize);
 }
 
 void chunk::ChunkHandler::handleChunks()
@@ -161,6 +158,10 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
     loadedAnimations.resize(sizes.animations);
     inFile.read(reinterpret_cast<char*>(loadedAnimations.data()), sizeof(AnimationTile) * sizes.animations);
 
+    std::vector<LayeredStaticTile> loadedLayers;
+    loadedLayers.resize(sizes.layeredTiles);
+    inFile.read(reinterpret_cast<char*>(loadedLayers.data()), sizeof(LayeredStaticTile) * sizes.layeredTiles);
+
     if (chunks.capacity() < sizes.chunks)
     {
         chunks.resize(sizes.chunks);
@@ -180,6 +181,11 @@ void chunk::ChunkHandler::loadFromFile(const std::string& filename)
         for (size_t indexToBuffer = chunk.animatedTileBuffer.offset; indexToBuffer < chunk.animatedTileBuffer.offset + chunk.animatedTileBuffer.count; ++indexToBuffer)
         {
             editorChunk.animations.push_back(loadedAnimations[indexToBuffer]);
+        }
+
+        for (size_t indexToBuffer = chunk.layeredTilesBuffer.offset; indexToBuffer < chunk.layeredTilesBuffer.offset + chunk.layeredTilesBuffer.count; ++indexToBuffer)
+        {
+            editorChunk.layeredTiles.push_back(loadedLayers[indexToBuffer]);
         }
 
         chunkMap[combineCoords(chunk.x, chunk.y)] = i;
@@ -214,6 +220,7 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
         EditorSideChunkData& chunk = chunks[entry.second];
         sizes.entities += chunk.entities.size();
         sizes.animations += chunk.animations.size();
+        sizes.layeredTiles += chunk.layeredTiles.size();
     }
 
     std::vector<EntityTile> allEntities;
@@ -222,9 +229,11 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
     std::vector<AnimationTile> allAnimations;
     allAnimations.reserve(sizes.animations);
 
+    std::vector<LayeredStaticTile> allLayeredTiles;
+    allLayeredTiles.reserve(sizes.layeredTiles);
+
 
     BufferSizes currentSizes{};
-
 
     for (const auto& entry : chunkMap)
     {
@@ -236,7 +245,7 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
             std::vector<EntityTile> filteredEntities;
             for (const auto& entity : chunk.entities)
             {
-                if (entity.textureID != 0)
+                if (entity.animation.textureID != 0)
                 {
                     filteredEntities.push_back(entity);
                 }
@@ -257,23 +266,40 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
             chunk.rawData.animatedTileBuffer.offset = currentSizes.animations;
             chunk.rawData.animatedTileBuffer.count = filteredAnimations.size();
 
+
+            std::vector<LayeredStaticTile> filteredLayeredTiles;
+            for (const auto& layeredTile : chunk.layeredTiles)
+            {
+                if (layeredTile.textureID != 0)
+                {
+                    filteredLayeredTiles.push_back(layeredTile);
+                }
+            }
+
+            chunk.rawData.layeredTilesBuffer.offset = currentSizes.layeredTiles;
+            chunk.rawData.layeredTilesBuffer.count = filteredLayeredTiles.size();
+
             outFile.write(reinterpret_cast<const char*>(&chunk.rawData), sizeof(ChunkData));
 
             allEntities.insert(allEntities.end(), filteredEntities.begin(), filteredEntities.end());
             allAnimations.insert(allAnimations.end(), filteredAnimations.begin(), filteredAnimations.end());
+            allLayeredTiles.insert(allLayeredTiles.end(), filteredLayeredTiles.begin(), filteredLayeredTiles.end());
 
             currentSizes.entities += chunk.entities.size();
             currentSizes.animations += chunk.animations.size();
+            currentSizes.layeredTiles += chunk.layeredTiles.size();
         }
         else
         {
             sizes.entities -= chunk.entities.size();
             sizes.animations -= chunk.animations.size();
+            sizes.layeredTiles -= chunk.layeredTiles.size();
         }
     }
 
     outFile.write(reinterpret_cast<const char*>(allEntities.data()), sizeof(EntityTile) * sizes.entities);
     outFile.write(reinterpret_cast<const char*>(allAnimations.data()), sizeof(AnimationTile) * sizes.animations);
+    outFile.write(reinterpret_cast<const char*>(allLayeredTiles.data()), sizeof(LayeredStaticTile)* sizes.layeredTiles);
 
     outFile.seekp(0);
     outFile.write(reinterpret_cast<const char*>(&sizes), sizeof(BufferSizes));

@@ -1,7 +1,6 @@
 #pragma once
 #include "chunk/VBOHandler.h"
 #include "animation/AnimationHandler.h"
-#include <memory>
 
 
 struct EditorCreationInfo
@@ -28,11 +27,16 @@ public:
 	AnimationHandler& getAnimationHandler();
 	chunk::ChunkHandler& getChunkHandler();
 
+	ChunkData* getChunkData(const sf::Vector2i& position);
+	sf::VertexBuffer* getVBOPtr(const sf::Vector2i& position);
+
+
+
 private:
 
 	void updateBuffers();
 private:
-	std::unique_ptr<chunk::ChunkHandler> chunkHandler;
+	chunk::ChunkHandler chunkHandler;
 	VBOHandler vboHandler;
 	AnimationHandler animationHandler;
 
