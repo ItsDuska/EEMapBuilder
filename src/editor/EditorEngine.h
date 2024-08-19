@@ -78,17 +78,8 @@ struct ChunkPositions
 	sf::Vector2i positionInWorld;
 	sf::Vector2i chunkPosition;
 	sf::Vector2i positionInChunk;
+	int indexToTileMap;
 };
-
-
-
-/*
-
-Siirr‰ palikan laittaminen ja inspectaaminen sek‰ undo homma omaan classiin.
-ehk‰‰?
-
-*/
-
 
 class EditorEngine
 {
@@ -117,9 +108,14 @@ private:
 	void addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex, bool isSolid);
 
+
+	//LayeredBlocks
+	void addLayeredBlock(sf::Vector2i& position, sf::Vector2i& offset,
+		const int guiIndex);
+
 	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
 
-	void calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset);
+	bool calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset);
 
 	void updateVBOAndMap(const sf::Vector2i& vertPosition,
 		const sf::Vector2i& chunkPosition,

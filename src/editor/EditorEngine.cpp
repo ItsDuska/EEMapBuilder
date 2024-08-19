@@ -50,12 +50,12 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	editorHandler = std::make_unique<EditorHandler>(info);
 	spritesPerRow = editorHandler->getVBOHandler().getSpriteSheetSizeInTiles().x;
 
-	std::string layeredSpriteSheetPath = "data/texture/Pietari.png";
-	if (!layeredObjectsTexture.loadFromFile(layeredSpriteSheetPath))
-	{
-		std::cerr << "ERROR: Can't open texture!\n";
-		return;
-	}
+	//std::string layeredSpriteSheetPath = "data/texture/Pietari.png";
+	//if (!layeredObjectsTexture.loadFromFile(layeredSpriteSheetPath))
+	//{
+		//std::cerr << "ERROR: Can't open texture!\n";
+		//return;
+	//}
 
 	currentTexture.setTexture(editorHandler->getVBOHandler().getTexture());
 	currentTexture.setScale(sf::Vector2f(4.f, 4.f));
@@ -84,16 +84,12 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	currentSpriteHolderBox.setScale(1.2f, 1.2f);
 	currentSpriteHolderBox.setFillColor(sf::Color(0,0,0,50));
 
-	const int layerSpritesPerRow = layeredObjectsTexture.getSize().x / spritePixelSize.x;
-	const int layerSpritesPerColumn = layeredObjectsTexture.getSize().y / spritePixelSize.y;
-	const int layerTotalSprites = layerSpritesPerRow * layerSpritesPerColumn;
-
 	sf::Texture* texturePtrs[MAX_TAB_COUNT] =
 	{
 		&editorHandler->getVBOHandler().getTexture(),
 		&editorHandler->getAnimationHandler().getTexture(),
 		nullptr,
-		&layeredObjectsTexture
+		&editorHandler->getLayeredTileHandler().getTexture()
 	};
 
 	VBOHandler &vbo = editorHandler->getVBOHandler();
@@ -101,13 +97,15 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	AnimationHandler& animationHandler = editorHandler->getAnimationHandler();
 
 	int staticTotalSprites = vbo.getSpriteSheetSizeInTiles().x * vbo.getSpriteSheetSizeInTiles().y;
+	int layerTotalSprites = editorHandler->getLayeredTileHandler().getSpriteSheetSizeInTiles().x * editorHandler->getLayeredTileHandler().getSpriteSheetSizeInTiles().y;
+
 
 	PackedTabInformation packedInfo[MAX_TAB_COUNT] =
 	{
 		{staticTotalSprites, vbo.getSpriteSheetSizeInTiles()},
 		{animationHandler.getAnimationCache().getMaxSprites(), animationHandler.getSpriteSheetSizeInTiles()},
 		{NULL,{NULL,NULL}},
-		{layerTotalSprites, {layerSpritesPerRow,layerSpritesPerColumn}}
+		{layerTotalSprites, editorHandler->getLayeredTileHandler().getSpriteSheetSizeInTiles()}
 	};
 
 	sf::Vector2i tempSize(spritePixelSize.x, spritePixelSize.y);
@@ -174,6 +172,12 @@ void EditorEngine::update(EventInfo& info)
 		
 		guiCurrentTextureIndex = cache.getStartPosition(possibleFutureBlockTextureIndex);
 		break;
+	case 3:
+		possibleFutureBlockTextureIndex = info.guiIndex;
+		guiCurrentTextureIndex = possibleFutureBlockTextureIndex;
+
+		currentTexture.setTexture(editorHandler->getLayeredTileHandler().getTexture());
+		break;
 	default:
 		break;
 	}
@@ -205,6 +209,9 @@ void EditorEngine::update(EventInfo& info)
 		case 1:
 			addAnimatedBlock(info.mousePosition, info.offset, possibleFutureBlockTextureIndex, 0);
 			break;
+		case 3:
+			addLayeredBlock(info.mousePosition, info.offset, possibleFutureBlockTextureIndex);
+			break;
 		default:
 			break;
 		}
@@ -218,6 +225,9 @@ void EditorEngine::update(EventInfo& info)
 			break;
 		case 1:
 			addAnimatedBlock(info.mousePosition, info.offset, 0, 0);
+			break;
+		case 3:
+			addLayeredBlock(info.mousePosition, info.offset, 0);
 			break;
 		default:
 			break;
@@ -335,10 +345,8 @@ void EditorEngine::resetAnimationRandomness()
 void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 	const int guiIndex, bool isSolid)
 {
-	sf::Vector2i newPosition(position.x / tileSize.x, position.y / tileSize.y);
-	newPosition += offset;
-	
-	if (newPosition == lastPosition)
+	ChunkPositions positions{};
+	if (!calculateChunkPositions(positions, position, offset))
 	{
 		return;
 	}
@@ -349,22 +357,8 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		currentTexCoord.y = 0;
 	}
 
-	const int width = static_cast<int>(TILEMAP_WIDTH);
-
-	const sf::Vector2i chunkPosition(
-		newPosition.x >= 0 ? newPosition.x / width : (newPosition.x - (width - 1)) / width,
-		newPosition.y >= 0 ? newPosition.y / width : (newPosition.y - (width - 1)) / width
-	);
-
-	const sf::Vector2i positionInGrid(
-		newPosition.x >= 0 ? newPosition.x % width : (width - 1) + ((newPosition.x + 1) % width),
-		newPosition.y >= 0 ? newPosition.y % width : (width - 1) + ((newPosition.y + 1) % width)
-	);
-
-	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
-
-	ChunkData* chunkData = editorHandler->getChunkData(chunkPosition);
-	sf::VertexBuffer* buffer = editorHandler->getVBOPtr(chunkPosition);
+	ChunkData* chunkData = editorHandler->getChunkData(positions.chunkPosition);
+	sf::VertexBuffer* buffer = editorHandler->getVBOPtr(positions.chunkPosition);
 
 	if (chunkData == nullptr || buffer == nullptr)
 	{
@@ -375,40 +369,23 @@ void EditorEngine::addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 	Action action{};
 	action.mousePosition = position;
 	action.offset = offset;
-	action.textureIndexOld = chunkData->tilemap[index];
-	action.solidModeOld = chunk::isBitSet(chunkData->solidBlockData[positionInGrid.y], positionInGrid.x);
+	action.textureIndexOld = chunkData->tilemap[positions.indexToTileMap];
+	action.solidModeOld = chunk::isBitSet(chunkData->solidBlockData[positions.positionInChunk.y], positions.positionInChunk.x);
 	action.textureIndexCurrent = guiIndex;
 	action.solidModeCurrent = isSolid;
 
 	undoStack.addAction(action);
 
-	updateVBOAndMap(newPosition, chunkPosition, positionInGrid, guiIndex, isSolid);
+	updateVBOAndMap(positions.positionInChunk, positions.chunkPosition, positions.positionInChunk, guiIndex, isSolid);
 }
 
 void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex, bool isSolid)
 {
-	sf::Vector2i newPosition(position.x / tileSize.x, position.y / tileSize.y);
-	newPosition += offset;
-
-	if (newPosition == lastPosition)
+	ChunkPositions positions{};
+	if (!calculateChunkPositions(positions, position, offset))
 	{
 		return;
 	}
-
-	const int width = static_cast<int>(TILEMAP_WIDTH);
-
-	const sf::Vector2i chunkPosition(
-		newPosition.x >= 0 ? newPosition.x / width : (newPosition.x - (width - 1)) / width,
-		newPosition.y >= 0 ? newPosition.y / width : (newPosition.y - (width - 1)) / width
-	);
-
-	const sf::Vector2i positionInGrid(
-		newPosition.x >= 0 ? newPosition.x % width : (width - 1) + ((newPosition.x + 1) % width),
-		newPosition.y >= 0 ? newPosition.y % width : (width - 1) + ((newPosition.y + 1) % width)
-	);
-
-	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
-
 
 	//GET DATA FOR UNDO
 	//Action action{};
@@ -427,13 +404,13 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 
 
 	sf::Vector2<std::uint8_t> inChunk(
-		static_cast<std::uint8_t>(positionInGrid.x),
-		static_cast<std::uint8_t>(positionInGrid.y)
+		static_cast<std::uint8_t>(positions.positionInChunk.x),
+		static_cast<std::uint8_t>(positions.positionInChunk.y)
 	);
 
 	auto& chunkHandler = editorHandler->getChunkHandler();
 
-	std::vector<AnimationTile>& tiles = chunkHandler.getEditorSideData(chunkPosition.x, chunkPosition.y)->animations;
+	std::vector<AnimationTile>& tiles = chunkHandler.getEditorSideData(positions.chunkPosition.x, positions.chunkPosition.y)->animations;
 	
 
 	bool updated = false;
@@ -459,43 +436,85 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 	}
 
 	editorHandler->getAnimationHandler().constrcuctAnimatedTiles(chunkHandler);
-	lastPosition = newPosition;
+	lastPosition = positions.positionInWorld;
 }
 
 
+void EditorEngine::addLayeredBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex)
+{
+	ChunkPositions positions{};
+	if (!calculateChunkPositions(positions, position, offset))
+	{
+		return;
+	}
+
+	if (guiIndex == 0)
+	{
+		currentTexCoord.x = 0;
+		currentTexCoord.y = 0;
+	}
+
+	sf::Vector2<std::uint8_t> inChunk(
+		static_cast<std::uint8_t>(positions.positionInChunk.x),
+		static_cast<std::uint8_t>(positions.positionInChunk.y)
+	);
+
+	auto& chunkHandler = editorHandler->getChunkHandler();
+
+	std::vector<LayeredStaticTile>& tiles = chunkHandler.getEditorSideData(positions.chunkPosition.x, positions.chunkPosition.y)->layeredTiles;
+
+
+	bool updated = false;
+
+	for (LayeredStaticTile& tile : tiles) {
+		if (tile.positionInChunk == inChunk)
+		{
+			tile.textureID = guiIndex;
+			updated = true;
+			break;
+		}
+	}
+
+	if (!updated)
+	{
+		LayeredStaticTile newTile;
+		newTile.positionInChunk = inChunk;
+		newTile.textureID = guiIndex;
+		tiles.push_back(newTile);
+	}
+
+	editorHandler->getLayeredTileHandler().constractBuffer(chunkHandler);
+	//editorHandler->getAnimationHandler().constrcuctAnimatedTiles(chunkHandler);
+	lastPosition = positions.positionInWorld;
+
+
+}
+
 int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
 {
-	sf::Vector2i newPosition(position.x / tileSize.x, position.y / tileSize.y);
-	newPosition += offset;
+	ChunkPositions positions{};
+	calculateChunkPositions(positions, position, offset);
 
-	const int width = static_cast<int>(TILEMAP_WIDTH);
-
-	const sf::Vector2i chunkPosition(
-		newPosition.x >= 0 ? newPosition.x / width : (newPosition.x - (width - 1)) / width,
-		newPosition.y >= 0 ? newPosition.y / width : (newPosition.y - (width - 1)) / width
-	);
-
-	const sf::Vector2i positionInGrid(
-		newPosition.x >= 0 ? newPosition.x % width : (width - 1) + ((newPosition.x + 1) % width),
-		newPosition.y >= 0 ? newPosition.y % width : (width - 1) + ((newPosition.y + 1) % width)
-	);
-
-	const int index = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
-
-	ChunkData* chunkData = editorHandler->getChunkData(chunkPosition);
+	ChunkData* chunkData = editorHandler->getChunkData(positions.chunkPosition);
 
 	if (chunkData == nullptr)
 	{
 		return 0;
 	}
 
-	return static_cast<int>(chunkData->tilemap[index]);
+	return static_cast<int>(chunkData->tilemap[positions.indexToTileMap]);
 }
 
-void EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset)
+bool EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset)
 {
 	sf::Vector2i newPosition(mousePosition.x / tileSize.x, mousePosition.y / tileSize.y);
 	newPosition += offset;
+
+	if (newPosition == lastPosition)
+	{
+		return false;
+	}
+
 
 	const int width = static_cast<int>(TILEMAP_WIDTH);
 
@@ -512,13 +531,14 @@ void EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector
 	positions.positionInWorld = newPosition;
 	positions.chunkPosition = chunkPosition;
 	positions.positionInChunk = positionInGrid;
+	positions.indexToTileMap = positionInGrid.y * TILEMAP_WIDTH + positionInGrid.x;
+	return true;
 }
 
 void EditorEngine::updateVBOAndMap(const sf::Vector2i& vertPosition, const sf::Vector2i& chunkPosition, const sf::Vector2i& positionInChunk, const int textureIndex, const bool solidMode)
 {
 	const int index = positionInChunk.y * TILEMAP_WIDTH + positionInChunk.x;
 
-	
 	ChunkData* chunkData = editorHandler->getChunkData(chunkPosition);
 
 	sf::VertexBuffer* buffer = editorHandler->getVBOPtr(chunkPosition);

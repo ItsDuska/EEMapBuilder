@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\chunk\LayeredTileHandler.cpp" />
     <ClCompile Include="src\animation\AnimationHandler.cpp" />
     <ClCompile Include="src\animation\AnimationCache.cpp" />
     <ClCompile Include="src\chunk\ChunkUtils.cpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="src\chunk\VBOHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\chunk\LayeredTileHandler.h" />
     <ClInclude Include="src\animation\AnimationHandler.h" />
     <ClInclude Include="src\animation\AnimationCache.h" />
     <ClInclude Include="src\chunk\ChunkUtils.h" />

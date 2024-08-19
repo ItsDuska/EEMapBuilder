@@ -2,7 +2,8 @@
 
 EditorHandler::EditorHandler(EditorCreationInfo& info)
     : vboHandler(info.staticSpriteSheetTexturePath,info.spritePixelSize),
-    animationHandler(info.animatedSpriteSheetTexturePath,info.spritePixelSize)
+    animationHandler(info.animatedSpriteSheetTexturePath,info.spritePixelSize),
+    layer(info.layeredSpriteSheetTexturePath, info.spritePixelSize)
 {
     chunkHandler.setAssetSizes(
         info.tileSize,
@@ -20,13 +21,13 @@ void EditorHandler::update(sf::Vector2f& position)
 	{
 		updateBuffers();
 	}
-
 }
 
 void EditorHandler::render(sf::RenderTarget& window, bool shaderUniformShowVisibility)
 {
     vboHandler.render(window, shaderUniformShowVisibility);
     animationHandler.render(window);
+    layer.render(window);
 }
 
 VBOHandler& EditorHandler::getVBOHandler()
@@ -42,6 +43,11 @@ AnimationHandler& EditorHandler::getAnimationHandler()
 chunk::ChunkHandler& EditorHandler::getChunkHandler()
 {
     return chunkHandler;
+}
+
+LayeredTileHandler& EditorHandler::getLayeredTileHandler()
+{
+    return layer;
 }
 
 ChunkData* EditorHandler::getChunkData(const sf::Vector2i& position)
@@ -71,7 +77,6 @@ void EditorHandler::updateBuffers()
 
     tasks.clear();
 
-
     std::vector<uint16_t>& deletionQueue = chunkHandler.getDeletionQueue();
     for (int i = 0; i<deletionQueue.size(); i++)
     {
@@ -82,5 +87,6 @@ void EditorHandler::updateBuffers()
     deletionQueue.clear();
     
     animationHandler.constrcuctAnimatedTiles(chunkHandler);
+    layer.constractBuffer(chunkHandler);
 
 }

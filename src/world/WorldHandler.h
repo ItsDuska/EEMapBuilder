@@ -1,6 +1,7 @@
 #pragma once
 #include "chunk/VBOHandler.h"
 #include "animation/AnimationHandler.h"
+#include "chunk/LayeredTileHandler.h"
 
 
 struct EditorCreationInfo
@@ -26,6 +27,7 @@ public:
 	VBOHandler& getVBOHandler();
 	AnimationHandler& getAnimationHandler();
 	chunk::ChunkHandler& getChunkHandler();
+	LayeredTileHandler& getLayeredTileHandler();
 
 	ChunkData* getChunkData(const sf::Vector2i& position);
 	sf::VertexBuffer* getVBOPtr(const sf::Vector2i& position);
@@ -39,6 +41,7 @@ private:
 	chunk::ChunkHandler chunkHandler;
 	VBOHandler vboHandler;
 	AnimationHandler animationHandler;
+	LayeredTileHandler layer;
 
 };
 

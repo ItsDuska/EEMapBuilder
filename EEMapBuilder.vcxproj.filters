@@ -51,6 +51,9 @@
     <ClCompile Include="src\chunk\VBOHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\chunk\LayeredTileHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\front\Application.h">
@@ -87,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\chunk\VBOHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\chunk\LayeredTileHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
