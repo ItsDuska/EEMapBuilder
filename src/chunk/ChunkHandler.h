@@ -52,7 +52,7 @@ namespace chunk
 	public:
 		ChunkHandler();
 		void update(sf::Vector2f& position);
-		void addChunk(sf::Vector2i chunkPosition);
+		void addChunk(sf::Vector2i& chunkPosition);
 		void removeChunk(uint16_t index);
 
 		void setAssetSizes(

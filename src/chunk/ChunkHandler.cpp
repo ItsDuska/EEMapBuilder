@@ -37,7 +37,7 @@ void chunk::ChunkHandler::update(sf::Vector2f& position)
     lastChunkCoord = currentChunkCoord;
 }
 
-void chunk::ChunkHandler::addChunk(sf::Vector2i chunkPosition)
+void chunk::ChunkHandler::addChunk(sf::Vector2i& chunkPosition)
 {
     chunks.emplace_back();
     ChunkData* data = &chunks.back().rawData;
@@ -45,10 +45,9 @@ void chunk::ChunkHandler::addChunk(sf::Vector2i chunkPosition)
     data->y = static_cast<int16_t>(chunkPosition.y);
     activeChunks.push_back(chunkPosition);
 
-
     ChunkCreationTask task = {};
     task.chunkCoord = chunkPosition;
-    task.hasTileMap = true;
+    task.hasTileMap = false;
     task.chunkData = data;
     chunkTaskList.push_back(task);
 
@@ -265,7 +264,6 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
 
             chunk.rawData.animatedTileBuffer.offset = currentSizes.animations;
             chunk.rawData.animatedTileBuffer.count = filteredAnimations.size();
-
 
             std::vector<LayeredStaticTile> filteredLayeredTiles;
             for (const auto& layeredTile : chunk.layeredTiles)

@@ -61,7 +61,6 @@ void EditorHandler::updateBuffers()
 
     for (const chunk::ChunkCreationTask& task : tasks)
     {
-       
         vboHandler.addVertexBuffer(
             task.chunkCoord,
             task.hasTileMap,
@@ -74,9 +73,10 @@ void EditorHandler::updateBuffers()
 
 
     std::vector<uint16_t>& deletionQueue = chunkHandler.getDeletionQueue();
-    for (const uint16_t& index : deletionQueue)
+    for (int i = 0; i<deletionQueue.size(); i++)
     {
-        vboHandler.removeBuffer(index);
+        const uint16_t fixedIndex = deletionQueue[i] - i;
+        vboHandler.removeBuffer(fixedIndex);
     }
 
     deletionQueue.clear();
