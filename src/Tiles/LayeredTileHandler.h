@@ -1,7 +1,6 @@
 #pragma once
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Graphics/Texture.hpp>
-//#include <string>
 
 namespace chunk
 {

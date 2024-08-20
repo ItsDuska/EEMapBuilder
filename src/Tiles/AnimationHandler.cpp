@@ -2,39 +2,9 @@
 #include "chunk/ChunkHandler.h"
 
 
-
-/*
-
-Tee uus main handler class joka omistaa kaiken mitäö chunkhandlerissa aiemmi oli
-
-*/
-
 AnimationHandler::AnimationHandler(std::string& animationFileName, sf::Vector2f& spritePixelSize)
+    : BaseAnimationHandler(animationFileName,spritePixelSize)
 {
-	vaTiles.setPrimitiveType(sf::Quads);
-
-    if (!texture.loadFromFile(animationFileName))
-    {
-        std::cerr << "ERROR: Can't open texture!\n";
-        return;
-    }
-
-    const sf::Vector2u imageSize = texture.getSize();
-
-    spriteSheetSizeInTiles.x = imageSize.x / spritePixelSize.x;
-    spriteSheetSizeInTiles.y = imageSize.y / spritePixelSize.y;
-
-    //spriteSheetSizeInTiles = {
-        //static_cast<float>(texture.getSize().x) / spritePixelSize.x,
-       // static_cast<float>(texture.getSize().y) / spritePixelSize.y
-    //};
-
-
-    animationCache.awake(
-        sf::Vector2i(spritePixelSize.x, spritePixelSize.y),
-        sf::Vector2i(texture.getSize().x, texture.getSize().y)
-    );
-    
 }
 
 void AnimationHandler::resetAnimationRandomness(chunk::ChunkHandler& handler)
@@ -63,11 +33,6 @@ void AnimationHandler::resetAnimationRandomness(chunk::ChunkHandler& handler)
             tile.elapsedFrames = 0;
         }
     }
-}
-
-void AnimationHandler::render(sf::RenderTarget& window)
-{
-    window.draw(vaTiles, &texture);
 }
 
 void AnimationHandler::constrcuctAnimatedTiles(chunk::ChunkHandler& handler)
@@ -173,19 +138,4 @@ void AnimationHandler::UpdateVATexCoords(chunk::ChunkHandler& handler)
             index += 4;
         }
     }
-}
-
-sf::Texture& AnimationHandler::getTexture()
-{
-    return texture;
-}
-
-sf::Vector2i& AnimationHandler::getSpriteSheetSizeInTiles()
-{
-    return spriteSheetSizeInTiles;
-}
-
-AnimationCache& AnimationHandler::getAnimationCache()
-{
-    return animationCache;
 }

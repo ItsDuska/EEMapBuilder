@@ -1,8 +1,7 @@
 #pragma once
-#include "chunk/VBOHandler.h"
-#include "animation/AnimationHandler.h"
-#include "chunk/LayeredTileHandler.h"
-
+#include "Tiles/VBOHandler.h"
+#include "Tiles/AnimationHandler.h"
+#include "Tiles/LayeredTileHandler.h"
 
 struct EditorCreationInfo
 {

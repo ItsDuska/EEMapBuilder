@@ -579,11 +579,12 @@ void EditorEngine::updateTextDisplay(EventInfo& info)
 		"\nSave (TAB)"
 		"\nQuit (ESC)"
 		"\nOpen Menu (E)"
+		"\nEdit Tile (Q)"
 		"\nMove (WASD) duh"
 		"\nGet Block (MMB)"
 		"\nUndo (Z)"
 		"\nRedo (X)"
-		"\nTabs (0-1)"
+		"\nTabs (1-4)"
 		"\nReset animation Randomness (G)"
 		"\nHard Reset (DELETE)"; 
 

@@ -12,7 +12,6 @@ struct BufferView
 	uint16_t count; // Interaktiivisten elementtien m‰‰r‰
 };
 
-
 struct ChunkData
 {
 	int16_t x;
@@ -34,13 +33,12 @@ struct AnimationTile
 	uint16_t elapsedFrames;
 };
 
-struct EntityTile // Oikea versio siit‰. Vanha poistetaan pian ja t‰‰ tulee sen tilalle
+struct EntityTile				// Oikea versio siit‰. Vanha poistetaan pian ja t‰‰ tulee sen tilalle
 {
-	AnimationTile animation; // Animaatio tavarat. Ei ole pakosti
-	uint16_t type; // Esimerkkin‰ ovi, joka vie toiseen huoneeseen. 1 voi olla ovi, 2 kyltti ja jne...
-	uint16_t actionId; //Esim huoneen id johon ovi voi vide‰ tai vaikkapa kyltin tekstin indeksi listaan, joka on p‰in vattua.
+	AnimationTile animation;			// Animaatio tavarat. Ei ole pakosti
+	uint16_t type;					// Esimerkkin‰ ovi, joka vie toiseen huoneeseen. 1 voi olla ovi, 2 kyltti ja jne...
+	uint16_t actionId;				//Esim huoneen id johon ovi voi vide‰ tai vaikkapa kyltin tekstin indeksi listaan, joka on p‰in vattua.
 };
-
 
 struct LayeredStaticTile
 {
