@@ -2,7 +2,7 @@
 #include <fstream>
 
 
-void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i textureSize)
+void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i textureSize,std::string& filepath)
 {
     if (built)
     {
@@ -17,12 +17,14 @@ void AnimationCache::awake(const sf::Vector2i frameSize, const sf::Vector2i text
     built = true;
 
 
-    const char* filepath = "data/texture/animationFrames.data";
+    //const char* filepath = "data/texture/animationFrames.data";
+    std::string fullFilePath = filepath + ".data";
 
-    std::ifstream file(filepath);
+
+    std::ifstream file(fullFilePath);
     if (!file.is_open())
     {
-        std::cerr << "Failed to open file: " << filepath << std::endl;
+        std::cerr << "Failed to open file: " << fullFilePath << std::endl;
         return;
     }
 
@@ -117,4 +119,6 @@ void AnimationCache::precomputeStartPositions()
         std::cout << i << " : values are |" << x/16 << "x " << y/16 << "y\n";
         x += frameCounts[i] * frameSize.x;
     }
+
+    std::cout << "amongler\n";
 }

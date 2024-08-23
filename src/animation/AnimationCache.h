@@ -7,7 +7,7 @@
 class AnimationCache
 {
 public:
-    void awake(const sf::Vector2i frameSize, const sf::Vector2i textureSize);
+    void awake(const sf::Vector2i frameSize, const sf::Vector2i textureSize,std::string& filepath);
 
     sf::Vector2i getAnimationFrame(int animationIndex, int frame) const;
     std::vector<sf::Vector2i>* getStartPositionsPtr();

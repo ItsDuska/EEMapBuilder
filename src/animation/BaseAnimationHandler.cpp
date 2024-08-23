@@ -5,7 +5,9 @@ BaseAnimationHandler::BaseAnimationHandler(std::string& animationFileName, sf::V
 {
     vaTiles.setPrimitiveType(sf::Quads);
 
-    if (!texture.loadFromFile(animationFileName))
+    std::string fullFilePath = animationFileName + ".png";
+
+    if (!texture.loadFromFile(fullFilePath))
     {
         std::cerr << "ERROR: Can't open texture!\n";
         return;
@@ -18,7 +20,7 @@ BaseAnimationHandler::BaseAnimationHandler(std::string& animationFileName, sf::V
 
     animationCache.awake(
         sf::Vector2i(spritePixelSize.x, spritePixelSize.y),
-        sf::Vector2i(texture.getSize().x, texture.getSize().y)
+        sf::Vector2i(texture.getSize().x, texture.getSize().y),animationFileName
     );
 }
 

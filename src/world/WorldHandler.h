@@ -2,6 +2,7 @@
 #include "Tiles/VBOHandler.h"
 #include "Tiles/AnimationHandler.h"
 #include "Tiles/LayeredTileHandler.h"
+#include "Tiles/Entity.h"
 
 struct EditorCreationInfo
 {
@@ -27,6 +28,7 @@ public:
 	AnimationHandler& getAnimationHandler();
 	chunk::ChunkHandler& getChunkHandler();
 	LayeredTileHandler& getLayeredTileHandler();
+	EntityHandler& getEntityHandler();
 
 	ChunkData* getChunkData(const sf::Vector2i& position);
 	sf::VertexBuffer* getVBOPtr(const sf::Vector2i& position);
@@ -41,6 +43,7 @@ private:
 	VBOHandler vboHandler;
 	AnimationHandler animationHandler;
 	LayeredTileHandler layer;
+	EntityHandler entity;
 
 };
 

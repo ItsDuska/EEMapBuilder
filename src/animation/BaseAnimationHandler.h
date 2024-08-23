@@ -16,7 +16,7 @@ public:
 
     void render(sf::RenderTarget& window);
 
-    virtual void constrcuctAnimatedTiles(chunk::ChunkHandler& handler) = 0;
+    virtual void constructTileBuffer(chunk::ChunkHandler& handler) = 0;
     virtual void UpdateVATexCoords(chunk::ChunkHandler& handler) = 0;
 
     sf::Texture& getTexture();

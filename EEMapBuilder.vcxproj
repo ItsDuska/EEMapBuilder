@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Tiles\Entity.cpp" />
     <ClCompile Include="src\animation\BaseAnimationHandler.cpp" />
     <ClCompile Include="src\Tiles\LayeredTileHandler.cpp" />
     <ClCompile Include="src\Tiles\AnimationHandler.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="src\Tiles\VBOHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Tiles\Entity.h" />
     <ClInclude Include="src\animation\BaseAnimationHandler.h" />
     <ClInclude Include="src\Tiles\LayeredTileHandler.h" />
     <ClInclude Include="src\Tiles\AnimationHandler.h" />

@@ -3,7 +3,8 @@
 EditorHandler::EditorHandler(EditorCreationInfo& info)
     : vboHandler(info.staticSpriteSheetTexturePath,info.spritePixelSize),
     animationHandler(info.animatedSpriteSheetTexturePath,info.spritePixelSize),
-    layer(info.layeredSpriteSheetTexturePath, info.spritePixelSize)
+    layer(info.layeredSpriteSheetTexturePath, info.spritePixelSize),
+    entity(info.objectSpriteSheetTexturePath,info.spritePixelSize)
 {
     chunkHandler.setAssetSizes(
         info.tileSize,
@@ -27,6 +28,7 @@ void EditorHandler::render(sf::RenderTarget& window, bool shaderUniformShowVisib
 {
     vboHandler.render(window, shaderUniformShowVisibility);
     animationHandler.render(window);
+    entity.render(window);
     layer.render(window);
 }
 
@@ -48,6 +50,11 @@ chunk::ChunkHandler& EditorHandler::getChunkHandler()
 LayeredTileHandler& EditorHandler::getLayeredTileHandler()
 {
     return layer;
+}
+
+EntityHandler& EditorHandler::getEntityHandler()
+{
+    return entity;
 }
 
 ChunkData* EditorHandler::getChunkData(const sf::Vector2i& position)
@@ -86,7 +93,7 @@ void EditorHandler::updateBuffers()
 
     deletionQueue.clear();
     
-    animationHandler.constrcuctAnimatedTiles(chunkHandler);
+    animationHandler.constructTileBuffer(chunkHandler);
     layer.constractBuffer(chunkHandler);
 
 }

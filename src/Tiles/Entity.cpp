@@ -1,41 +1,12 @@
-#include "AnimationHandler.h"
+#include "Entity.h"
 #include "chunk/ChunkHandler.h"
 
-
-AnimationHandler::AnimationHandler(std::string& animationFileName, sf::Vector2f& spritePixelSize)
-    : BaseAnimationHandler(animationFileName,spritePixelSize)
+EntityHandler::EntityHandler(std::string& filepath, sf::Vector2f& spritePixelSize)
+	: BaseAnimationHandler(filepath,spritePixelSize)
 {
 }
 
-void AnimationHandler::resetAnimationRandomness(chunk::ChunkHandler& handler)
-{
-    const int totalFrames = animationCache.getMaxSprites();
-
-    for (const sf::Vector2i& chunkCoord : handler.getActiveChunks())
-    {
-        chunk::EditorSideChunkData* data = handler.getEditorSideData(chunkCoord.x, chunkCoord.y);
-
-        if (data->animations.size() == 0)
-        {
-            continue;
-        }
-
-        for (int i = 0; i < data->animations.size(); i++)
-        {
-            AnimationTile& tile = data->animations[i];
-
-            if (tile.textureID == 0)
-            {
-                continue;
-            }
-
-            tile.currentFrame = 0;
-            tile.elapsedFrames = 0;
-        }
-    }
-}
-
-void AnimationHandler::constructTileBuffer(chunk::ChunkHandler& handler)
+void EntityHandler::constructTileBuffer(chunk::ChunkHandler& handler)
 {
     vaTiles.clear();
 
@@ -44,32 +15,32 @@ void AnimationHandler::constructTileBuffer(chunk::ChunkHandler& handler)
 
     for (const sf::Vector2i& chunkCoord : handler.getActiveChunks())
     {
-        sf::Vector2i newPosition((renderSizes.totalChunkSize.x * chunkCoord.x) / renderSizes.tileSize.x, (renderSizes.totalChunkSize.y * chunkCoord.y) / renderSizes.tileSize.y);
+        const sf::Vector2i newPosition((renderSizes.totalChunkSize.x * chunkCoord.x) / renderSizes.tileSize.x, (renderSizes.totalChunkSize.y * chunkCoord.y) / renderSizes.tileSize.y);
 
         const chunk::EditorSideChunkData* data = handler.getEditorSideData(chunkCoord.x, chunkCoord.y);
 
-        if (data->animations.size() == 0)
+        if (data->entities.size() == 0)
         {
             continue;
         }
 
-        for (int i = 0; i < data->animations.size(); i++)
+        for (int i = 0; i < data->entities.size(); i++)
         {
-            const AnimationTile& tile = data->animations[i];
+            const EntityTile& tile = data->entities[i];
 
-            if (tile.textureID == 0)
+            if (tile.animation.textureID == 0)
             {
                 continue;
             }
 
-            const int index = (tile.positionInChunk.y * CHUNK_SIZE + tile.positionInChunk.x);
+            const int index = (tile.animation.positionInChunk.y * CHUNK_SIZE + tile.animation.positionInChunk.x);
 
-            const int vertexIndex = (tile.positionInChunk.y * CHUNK_SIZE + tile.positionInChunk.x) * 4;
+            const int vertexIndex = (tile.animation.positionInChunk.y * CHUNK_SIZE + tile.animation.positionInChunk.x) * 4;
             sf::Vertex quad[4];
 
-            const sf::Vector2i vertposition(newPosition.x + tile.positionInChunk.x, newPosition.y + tile.positionInChunk.y);
+            const sf::Vector2i vertposition(newPosition.x + tile.animation.positionInChunk.x, newPosition.y + tile.animation.positionInChunk.y);
 
-            texCoord = animationCache.getAnimationFrame(tile.textureID, 0);
+            texCoord = animationCache.getAnimationFrame(tile.animation.textureID, 0);
 
             quad[0].position = { vertposition.x * renderSizes.tileSize.x ,vertposition.y * renderSizes.tileSize.y };
             quad[0].texCoords = { texCoord.x * renderSizes.spritePixelSize.x,texCoord.y * renderSizes.spritePixelSize.y };
@@ -91,7 +62,7 @@ void AnimationHandler::constructTileBuffer(chunk::ChunkHandler& handler)
     }
 }
 
-void AnimationHandler::UpdateVATexCoords(chunk::ChunkHandler& handler)
+void EntityHandler::UpdateVATexCoords(chunk::ChunkHandler& handler)
 {
     int index = 0;
 
@@ -103,28 +74,30 @@ void AnimationHandler::UpdateVATexCoords(chunk::ChunkHandler& handler)
     {
         chunk::EditorSideChunkData* data = handler.getEditorSideData(chunkCoord.x, chunkCoord.y);
 
-        if (data->animations.size() == 0)
+        if (data->entities.size() == 0)
         {
             continue;
         }
 
         for (int i = 0; i < data->animations.size(); i++)
         {
-            AnimationTile& tile = data->animations[i];
+            EntityTile& tile = data->entities[i];
 
-            if (tile.textureID == 0)
+            const int frameCount = animationCache.getAnimationFrameCount(tile.animation.textureID);
+
+            if (tile.animation.textureID == 0 || frameCount > 1)
             {
                 continue;
             }
 
             sf::Vertex* quad = &vaTiles[index];
-            sf::Vector2i texCoord = animationCache.getAnimationFrame(tile.textureID, tile.currentFrame);
+            sf::Vector2i texCoord = animationCache.getAnimationFrame(tile.animation.textureID, tile.animation.currentFrame);
 
-            tile.elapsedFrames++;
-            if (tile.elapsedFrames >= tile.frameDelay)
+            tile.animation.elapsedFrames++;
+            if (tile.animation.elapsedFrames >= tile.animation.frameDelay)
             {
-                tile.elapsedFrames = 0;
-                tile.currentFrame = (tile.currentFrame + 1) % animationCache.getAnimationFrameCount(tile.textureID);
+                tile.animation.elapsedFrames = 0;
+                tile.animation.currentFrame = (tile.animation.currentFrame + 1) % frameCount;
             }
 
             quad[0].texCoords = { texCoord.x * renderSizes.spritePixelSize.x,texCoord.y * renderSizes.spritePixelSize.y };

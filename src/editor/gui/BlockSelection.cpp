@@ -47,7 +47,9 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
     int row = static_cast<int>(visibleYPos / (tileSize.y + spacing));
 
     int blockIndex = row * data.sizeInTilesWithOffset.x + column;
-    if (currentTab == 1)
+
+    //if (currentTab == 1 || currentTab == 2)
+    if (currentTab != 0)
     {
         blockIndex++;
     }
@@ -60,11 +62,11 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
     return -1;
 }
 
-void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animationStartIndices)
+void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animationStartIndices, const std::vector<sf::Vector2i>* objectStartIndices)
 {
     constructVBO(guiElements[0],nullptr);
     constructVBO(guiElements[1], animationStartIndices);
-
+    constructVBO(guiElements[2], objectStartIndices);
     constructVBO(guiElements[3], nullptr);
     // construct objects...
     // construct layered blocks...
@@ -255,7 +257,9 @@ void BlockSelection::awake(sf::Vector2f& windowSize,
 
     // Objects...
     // data here...
-
+    guiElements[2].maxSpriteCount = packedTabs[2].maxSpriteCount;
+    guiElements[2].sizeInTiles = packedTabs[2].sizeInTiles;
+    guiElements[2].texturePtr = textures[2];
     // Layered Blocks...
     // data here...
     guiElements[3].maxSpriteCount = packedTabs[3].maxSpriteCount;

@@ -1,9 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
-
 constexpr int MAX_TAB_COUNT = 4;
-
 
 struct GUIBufferData
 {
@@ -14,13 +12,11 @@ struct GUIBufferData
 	sf::Texture* texturePtr;
 };
 
-
 struct PackedTabInformation
 {
 	int maxSpriteCount;
 	sf::Vector2i sizeInTiles;
 };
-
 
 class BlockSelection
 {
@@ -38,8 +34,7 @@ public:
 	// returns the blocks texture index
 	int select(sf::Vector2i& mousePosition); 
 
-	void constructElements(const std::vector<sf::Vector2i>* animationStartIndices);
-	
+	void constructElements(const std::vector<sf::Vector2i>* animationStartIndices, const std::vector<sf::Vector2i>* objectStartIndices);
 	void constructGUIText(sf::Font& font);
 private:
 	void setupBackground(sf::Vector2f windowSize);
@@ -56,32 +51,19 @@ private:
 
 	sf::Vector2i blockSize; //texture size ect. 16x16
 	sf::Vector2f tileSize;
-	
 	sf::Vector2f backgroundOffsetPosition;
-
 	int currentTab;
 	int currentOffset;
-
 	float spacing;
 	sf::FloatRect adjustedBounds;
 
-
 	// GUI ELEMENTS
 	sf::RectangleShape background;
-
 	sf::VertexBuffer staticBlockBuffer;
-
-	//sf::VertexArray animatedBlockBuffer;
-
 	sf::RenderStates globalGUIrenderStates;
-
 	sf::Text displayTabText[MAX_TAB_COUNT];
-
-
 	GUIBufferData guiElements[MAX_TAB_COUNT];
-
 	BufferView view;
-
 };
 
 /*

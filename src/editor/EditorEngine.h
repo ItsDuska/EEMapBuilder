@@ -103,8 +103,7 @@ public:
 private:
 	void addBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex, bool isSolid);
-	//void addEntity(); //TODO:
-	//void deleteEntity(); //TODO:
+	void addEntity(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex); //TODO
 	void addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex, bool isSolid);
 
