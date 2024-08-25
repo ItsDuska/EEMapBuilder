@@ -42,6 +42,7 @@ void Application::run()
 
 void Application::updateSFMLEvents()
 {
+	editor->resetButtonInfo();
 	while (window->pollEvent(sfEvent)) {
 		switch (sfEvent.type)
 		{

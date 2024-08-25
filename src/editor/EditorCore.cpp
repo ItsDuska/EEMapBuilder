@@ -31,7 +31,6 @@ EditorCore::EditorCore(sf::Vector2f& windowSize)
     createLines(windowSize);
     fileName = path + "EpistePng" + extensionName;
     engine.createMap(fileName);
-
 }
 
 EditorCore::~EditorCore()
@@ -51,22 +50,20 @@ void EditorCore::update()
 
 void EditorCore::draw(sf::RenderWindow& window)
 {
-    if (info.mouseActive)
+    info.mousePosition = sf::Mouse::getPosition(window);
+
+    sf::Vector2u size = window.getSize();
+
+    if (info.mousePosition.x > size.x || info.mousePosition.x < 0)
     {
-        info.mousePosition = sf::Mouse::getPosition(window);
-
-        sf::Vector2u size = window.getSize();
-
-        if (info.mousePosition.x > size.x || info.mousePosition.x < 0)
-        {
-            info.mousePosition.x = 0;
-        }
-
-        if (info.mousePosition.y > size.y || info.mousePosition.y < 0)
-        {
-            info.mousePosition.y = 0;
-        }
+        info.mousePosition.x = 0;
     }
+
+    if (info.mousePosition.y > size.y || info.mousePosition.y < 0)
+    {
+        info.mousePosition.y = 0;
+    }
+    
 
     if (info.hardReset)
     {
@@ -81,14 +78,21 @@ void EditorCore::draw(sf::RenderWindow& window)
         window.draw(lines);
     }
 
-    engine.drawGUI(window,info.activeInventory);
+    engine.drawGUI(window,info.activeInventory,info.showEditor);
 }
 
 void EditorCore::events(sf::Event& sfEvent)
 {
+    //info.buttonInfo = {};
+
     static int temp = 0;
     switch (sfEvent.type)
     {
+    case sf::Event::TextEntered:
+        info.buttonInfo.unicode = sfEvent.text.unicode;
+        info.buttonInfo.textEntered = true;
+        break;
+
     case sf::Event::MouseWheelScrolled:
         if (info.activeInventory)
         {
@@ -102,6 +106,7 @@ void EditorCore::events(sf::Event& sfEvent)
         if (sfEvent.mouseButton.button == sf::Mouse::Left)
         {
             info.mode = EditMode::ADD;
+            info.buttonInfo.leftMousePressed = true;
         }
         else if (sfEvent.mouseButton.button == sf::Mouse::Middle)
         {
@@ -147,6 +152,8 @@ void EditorCore::events(sf::Event& sfEvent)
 
 
     case sf::Event::KeyReleased:
+        info.buttonInfo.keyPressed = true;
+        info.buttonInfo.key = sfEvent.key.code;
         //1-9 tabs
         if (((sfEvent.key.code - sf::Keyboard::Num1) | (sf::Keyboard::Num9 - sfEvent.key.code)) >= 0)
         {
@@ -173,6 +180,10 @@ void EditorCore::events(sf::Event& sfEvent)
             std::cout << "SHOWING MODE: " << info.showSolidBlocks << "\n";
             break;
         case sf::Keyboard::E:
+            if (info.showEditor)
+            {
+                break;
+            }
             info.activeInventory = !info.activeInventory;
             std::cout << "INVENTORY MODE: " << info.activeInventory << "\n";
             break;
@@ -189,7 +200,12 @@ void EditorCore::events(sf::Event& sfEvent)
         case sf::Keyboard::G:
             engine.resetAnimationRandomness();
             break;
-        
+        case sf::Keyboard::Q:
+            if (!info.activeInventory)
+            {
+                info.showEditor = !info.showEditor;
+            }
+            break;
         default:
             break;
         }
@@ -205,6 +221,11 @@ void EditorCore::events(sf::Event& sfEvent)
     default:
         break;
     }
+}
+
+void EditorCore::resetButtonInfo()
+{
+    info.buttonInfo = {};
 }
 
 void EditorCore::createLines(sf::Vector2f& windowSize)

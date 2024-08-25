@@ -31,6 +31,8 @@ public:
 	void updateScrollOffset(int& offset);
 	void changeTab(int tab);
 
+	void updateTexturePtrs(sf::Texture** textures);
+
 	// returns the blocks texture index
 	int select(sf::Vector2i& mousePosition); 
 

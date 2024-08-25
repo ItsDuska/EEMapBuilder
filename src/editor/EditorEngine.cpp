@@ -36,6 +36,7 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	spritePixelSize = { 16.f,16.f };
 	currentTexCoord = {};
 	currentMousePosition = {};
+	lockDataEditorUpdate = false;
 
 	lastIndex = -5;
 	std::srand(static_cast<unsigned int>(std::time(nullptr)));
@@ -105,6 +106,9 @@ EditorEngine::EditorEngine(sf::Vector2f& windowSize,sf::Vector2f& tileSize)
 	gui.awake(windowSize, tempSize, tileSize, packedInfo, font, texturePtrs);
 	gui.constructElements(editorHandler->getAnimationHandler().getAnimationCache().getStartPositionsPtr(),
 		editorHandler->getEntityHandler().getAnimationCache().getStartPositionsPtr());
+
+	dataEditor.init(windowSize, font);
+
 }
 
 void EditorEngine::createMap(std::string& filename)
@@ -128,12 +132,76 @@ void EditorEngine::update(EventInfo& info)
 	currentMousePosition = {((info.offset.x+spritePixelSize.x) * tileSize.x),
 		((info.offset.y+spritePixelSize.y) * tileSize.y) };
 
+	if (info.showEditor)
+	{
+		bool isNull = false;
+		if (!lockDataEditorUpdate)
+		{
+			lockDataEditorUpdate = true;
+
+			lockedMousePosition = info.mousePosition;
+
+
+			if (info.currentTab == 1)
+			{
+				isNull = dataEditor.updateAnimationTile(getAnimatedTile(info.mousePosition, info.offset));
+			}
+			else if (info.currentTab == 2)
+			{
+				isNull = dataEditor.updateEntityTile(getEntityTile(info.mousePosition, info.offset));
+			}
+		}
+
+		if (isNull)
+		{
+			info.showEditor = false;
+			lockDataEditorUpdate = false;
+			return;
+		}
+
+		sf::Vector2f floatMousePosition(info.mousePosition.x, info.mousePosition.y);
+		dataEditor.update(info.buttonInfo, floatMousePosition, info.currentTab);
+		
+		return;
+	}
+
+
+	if (lockDataEditorUpdate)
+	{
+		if (info.currentTab == 1)
+		{
+			auto* tile = getAnimatedTile(lockedMousePosition, info.offset);
+			if (tile)
+			{
+				AnimationTile& newTile = dataEditor.getAnimationTile();
+				std::memcpy(tile, &newTile, sizeof(AnimationTile));
+			}
+			
+		}
+		else
+		{
+			auto* tile = getEntityTile(lockedMousePosition, info.offset);
+			if (tile)
+			{
+				EntityTile& newTile = dataEditor.getEntityTile();
+				std::memcpy(tile, &newTile, sizeof(EntityTile));
+			}
+			
+		}
+
+		lockDataEditorUpdate = false;
+	}
+
+	dataEditor.updateCurrenGUIType(info.currentTab);
+
+
 	editorHandler->update(currentMousePosition);
 
 	if (info.hardReset)
 	{
 		return;
 	}
+
 
 	updateTextDisplay(info);
 
@@ -281,10 +349,20 @@ void EditorEngine::hardReset()
 
 	editorHandler = std::make_unique<EditorHandler>(info);
 
+	sf::Texture* texturePtrs[MAX_TAB_COUNT] =
+	{
+		&editorHandler->getVBOHandler().getTexture(),
+		&editorHandler->getAnimationHandler().getTexture(),
+		&editorHandler->getEntityHandler().getTexture(),
+		&editorHandler->getLayeredTileHandler().getTexture()
+	};
+
+	gui.updateTexturePtrs(texturePtrs);
+
 	createMap(fileName);
 }
 
-void EditorEngine::drawGUI(sf::RenderTarget& window,bool enableInventoryRendering)
+void EditorEngine::drawGUI(sf::RenderTarget& window,bool enableInventoryRendering,bool enableEditorRendering)
 {
 	window.draw(currentSpriteHolderBox);
 	window.draw(currentTexture);
@@ -294,6 +372,12 @@ void EditorEngine::drawGUI(sf::RenderTarget& window,bool enableInventoryRenderin
 	{
 		gui.draw(window);
 	}
+
+	if (enableEditorRendering)
+	{
+		dataEditor.render(window);
+	}
+
 }
 
 void EditorEngine::renderMap(sf::RenderTarget& window,bool showVisibility)
@@ -514,6 +598,61 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 }
 
 
+AnimationTile* EditorEngine::getAnimatedTile(sf::Vector2i& position, sf::Vector2i& offset)
+{
+	ChunkPositions positions{};
+	calculateChunkPositions(positions, position, offset,true);
+	
+	sf::Vector2<std::uint8_t> inChunk(
+		static_cast<std::uint8_t>(positions.positionInChunk.x),
+		static_cast<std::uint8_t>(positions.positionInChunk.y)
+	);
+
+	auto& chunkHandler = editorHandler->getChunkHandler();
+
+	std::vector<AnimationTile>& tiles = chunkHandler.getEditorSideData(positions.chunkPosition.x, positions.chunkPosition.y)->animations;
+
+	for (AnimationTile& tile : tiles) {
+		if (tile.positionInChunk == inChunk)
+		{
+			return &tile;
+		}
+	}
+
+	// guh t‰‰ muute voi crashaa kai :D
+	// Ainaki sit huomaa et jotain hassua k‰vi
+	//std::cerr << "ERROR: Didn't find animation tile!\n";
+	return nullptr;
+}
+
+EntityTile* EditorEngine::getEntityTile(sf::Vector2i& position, sf::Vector2i& offset)
+{
+	ChunkPositions positions{};
+	calculateChunkPositions(positions, position, offset,true);
+
+	sf::Vector2<std::uint8_t> inChunk(
+		static_cast<std::uint8_t>(positions.positionInChunk.x),
+		static_cast<std::uint8_t>(positions.positionInChunk.y)
+	);
+
+	auto& chunkHandler = editorHandler->getChunkHandler();
+
+	std::vector<EntityTile>& tiles = chunkHandler.getEditorSideData(positions.chunkPosition.x, positions.chunkPosition.y)->entities;
+
+	for (EntityTile& tile : tiles) {
+		if (tile.animation.positionInChunk == inChunk)
+		{
+			return &tile;
+		}
+	}
+
+	// guh t‰‰ muute voi crashaa kai :D
+	// Ainaki sit huomaa et jotain hassua k‰vi
+	std::cerr << "ERROR: Didn't find animation tile!\n";
+	return nullptr;
+}
+
+
 void EditorEngine::addLayeredBlock(sf::Vector2i& position, sf::Vector2i& offset, const int guiIndex)
 {
 	ChunkPositions positions{};
@@ -576,12 +715,12 @@ int EditorEngine::inspectBlock(sf::Vector2i& position, sf::Vector2i& offset)
 	return static_cast<int>(chunkData->tilemap[positions.indexToTileMap]);
 }
 
-bool EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset)
+bool EditorEngine::calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset,bool disableLastPositionCheck)
 {
 	sf::Vector2i newPosition(mousePosition.x / tileSize.x, mousePosition.y / tileSize.y);
 	newPosition += offset;
 
-	if (newPosition == lastPosition)
+	if (!disableLastPositionCheck && newPosition == lastPosition)
 	{
 		return false;
 	}

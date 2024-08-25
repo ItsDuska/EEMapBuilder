@@ -2,7 +2,6 @@
 #include "EditorEngine.h"
 #include <vector>
 
-
 constexpr int MAX_TABS = 9;
 
 class EditorCore
@@ -13,6 +12,7 @@ public:
 	void update();
 	void draw(sf::RenderWindow& window);
 	void events(sf::Event& sfEvent);
+	void resetButtonInfo();
 
 private:
 	void createLines(sf::Vector2f& windowSize);

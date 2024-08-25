@@ -4,13 +4,15 @@
 #include <iostream>
 #include <string>
 
+#include "editor/EditorData.h"
+
 #include "world/WorldHandler.h"
 
 #include "chunk/ChunkHandler.h"
 #include "editor/gui/BlockSelection.h"
 #include "UndoStack.h"
 
-
+#include "editor/gui/DataEditor.h"
 
 
 /*
@@ -57,6 +59,7 @@ enum class EditMode : char
 	DELETE
 };
 
+
 struct EventInfo
 {
 	EditMode mode;
@@ -67,9 +70,11 @@ struct EventInfo
 	bool solidMode;
 	bool showSolidBlocks;
 	bool showLines;
+	bool showEditor;
 	bool activeInventory;
 	bool hardReset;
 	int currentTab;
+	ButtonEventInfo buttonInfo;
 
 };
 
@@ -90,7 +95,7 @@ public:
 	void saveMap(std::string& filename);
 	void hardReset();
 
-	void drawGUI(sf::RenderTarget& window, bool enableInventoryRendering);
+	void drawGUI(sf::RenderTarget& window, bool enableInventoryRendering, bool enableEditorRendering);
 	void renderMap(sf::RenderTarget& window, bool showVisibility);
 
 	void executeUndoAction(sf::Vector2i& offset);
@@ -108,13 +113,18 @@ private:
 		const int guiIndex, bool isSolid);
 
 
+	AnimationTile* getAnimatedTile(sf::Vector2i& position, sf::Vector2i& offset);
+	EntityTile* getEntityTile(sf::Vector2i& position, sf::Vector2i& offset);
+
+
+
 	//LayeredBlocks
 	void addLayeredBlock(sf::Vector2i& position, sf::Vector2i& offset,
 		const int guiIndex);
 
 	int inspectBlock(sf::Vector2i& position, sf::Vector2i& offset);
 
-	bool calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset);
+	bool calculateChunkPositions(ChunkPositions& positions, sf::Vector2i& mousePosition, sf::Vector2i& offset, bool disableLastPositionCheck = false);
 
 	void updateVBOAndMap(const sf::Vector2i& vertPosition,
 		const sf::Vector2i& chunkPosition,
@@ -149,5 +159,10 @@ private:
 	BlockSelection gui;
 	EditorCreationInfo info;
 
+	DataEditor dataEditor;
+
+	bool lockDataEditorUpdate;
+
+	sf::Vector2i lockedMousePosition;
 };
 

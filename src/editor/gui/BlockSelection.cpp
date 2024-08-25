@@ -28,27 +28,26 @@ static void createQuad(std::vector<sf::Vertex>& vertices, float xPos, float yPos
 
 int BlockSelection::select(sf::Vector2i& mousePosition)
 {
-    sf::Vector2f mousePosFloat(mousePosition.x, mousePosition.y);
+    sf::Vector2f floatMousePosition(mousePosition.x, mousePosition.y);
 
-    if (!adjustedBounds.contains(mousePosFloat))
+    if (!adjustedBounds.contains(floatMousePosition))
     {
-        return -1; // ei ole gui:n sis‰ll‰. Palauta error value.
+        return -1; // Ei ole gui:n sis‰ll‰, jotain katastrofista on tapahtunut.
     }
 
     const GUIBufferData& data = getCurrentElementData();
 
-    sf::Vector2f localMousePos = mousePosFloat - backgroundOffsetPosition;
-    localMousePos.x -= cornerOffset;
-    localMousePos.y -= cornerOffset;
+    sf::Vector2f localMousePosition = floatMousePosition - backgroundOffsetPosition;
+    localMousePosition.x -= cornerOffset;
+    localMousePosition.y -= cornerOffset;
 
-    float visibleYPos = localMousePos.y + currentOffset * (tileSize.y + spacing);
+    float visibleYPosition = localMousePosition.y + currentOffset * (tileSize.y + spacing);
 
-    int column = static_cast<int>(localMousePos.x / (tileSize.x + spacing));
-    int row = static_cast<int>(visibleYPos / (tileSize.y + spacing));
+    int column = static_cast<int>(localMousePosition.x / (tileSize.x + spacing));
+    int row = static_cast<int>(visibleYPosition / (tileSize.y + spacing));
 
     int blockIndex = row * data.sizeInTilesWithOffset.x + column;
 
-    //if (currentTab == 1 || currentTab == 2)
     if (currentTab != 0)
     {
         blockIndex++;
@@ -59,7 +58,7 @@ int BlockSelection::select(sf::Vector2i& mousePosition)
         return blockIndex;
     }
 
-    return -1;
+    return -1; // T‰h‰n ei pit‰isi koskaan p‰‰st‰. Jos p‰‰stiin niin jotain meni pieleen ja pahasti.
 }
 
 void BlockSelection::constructElements(const std::vector<sf::Vector2i>* animationStartIndices, const std::vector<sf::Vector2i>* objectStartIndices)
@@ -308,4 +307,12 @@ void BlockSelection::changeTab(int tab)
     displayTabText[currentTab].setFillColor(sf::Color::White);
     displayTabText[tab].setFillColor(sf::Color::Cyan);
     currentTab = tab;
+}
+
+void BlockSelection::updateTexturePtrs(sf::Texture** textures)
+{
+    for (int i = 0; i < MAX_TAB_COUNT; i++)
+    {
+        guiElements[i].texturePtr = textures[i];
+    }
 }

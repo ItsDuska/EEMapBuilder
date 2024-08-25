@@ -138,6 +138,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\editor\gui\DataEditor.cpp" />
+    <ClCompile Include="src\editor\gui\valueEditor\Button.cpp" />
     <ClCompile Include="src\Tiles\Entity.cpp" />
     <ClCompile Include="src\animation\BaseAnimationHandler.cpp" />
     <ClCompile Include="src\Tiles\LayeredTileHandler.cpp" />
@@ -155,6 +157,9 @@
     <ClCompile Include="src\Tiles\VBOHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\editor\gui\DataEditor.h" />
+    <ClInclude Include="src\editor\EditorData.h" />
+    <ClInclude Include="src\editor\gui\valueEditor\Button.h" />
     <ClInclude Include="src\Tiles\Entity.h" />
     <ClInclude Include="src\animation\BaseAnimationHandler.h" />
     <ClInclude Include="src\Tiles\LayeredTileHandler.h" />
