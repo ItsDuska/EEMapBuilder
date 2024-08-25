@@ -94,6 +94,7 @@ void EditorHandler::updateBuffers()
     deletionQueue.clear();
     
     animationHandler.constructTileBuffer(chunkHandler);
+    entity.constructTileBuffer(chunkHandler);
     layer.constractBuffer(chunkHandler);
 
 }

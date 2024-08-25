@@ -322,6 +322,7 @@ void EditorEngine::update(EventInfo& info)
 
 	chunk::ChunkHandler& chunkHandle = editorHandler->getChunkHandler();
 	editorHandler->getAnimationHandler().UpdateVATexCoords(chunkHandle);
+	editorHandler->getEntityHandler().UpdateVATexCoords(chunkHandle);
 }
 
 void EditorEngine::saveMap(std::string& filename)

@@ -94,7 +94,7 @@ int AnimationCache::getMaxSprites()
 int AnimationCache::getAnimationFrameCount(int animationIndex)
 {
     if (animationIndex <= 0 || animationIndex >= frameCounts.size()) {
-        std::cerr << "sussy Animation number: returning 0. Your number is " << animationIndex << "\n";
+        //std::cerr << "sussy Animation number: returning 0. Your number is " << animationIndex << "\n";
         return 0;
     }
     return frameCounts[animationIndex];
@@ -119,6 +119,4 @@ void AnimationCache::precomputeStartPositions()
         std::cout << i << " : values are |" << x/16 << "x " << y/16 << "y\n";
         x += frameCounts[i] * frameSize.x;
     }
-
-    std::cout << "amongler\n";
 }

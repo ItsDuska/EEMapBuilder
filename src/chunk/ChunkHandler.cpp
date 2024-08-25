@@ -25,6 +25,7 @@ void chunk::ChunkHandler::update(sf::Vector2f& position)
     {
         if (!loaded)
         {
+            
             std::cout << "INFO: Loading new chunks\n";
             handleChunks();
         }
@@ -250,8 +251,8 @@ void chunk::ChunkHandler::saveToFile(const std::string& filename)
                 }
             }
 
-            chunk.rawData.animatedTileBuffer.offset = currentSizes.animations;
-            chunk.rawData.animatedTileBuffer.count = filteredEntities.size();
+            chunk.rawData.entityBuffer.offset = currentSizes.entities;
+            chunk.rawData.entityBuffer.count = filteredEntities.size();
 
             std::vector<AnimationTile> filteredAnimations;
             for (const auto& animation : chunk.animations)

@@ -58,7 +58,7 @@ guiButton::TextButton::TextButton(sf::Vector2f position,
     std::function<void(const std::string&)> function)
 {
 	originalText = buttonText;
-	setupCore(color, charSize, buttonText+"00000", font, function);
+	setupCore(color, charSize, buttonText+"000", font, function);
 	calculatePosition(position, windowSize);
 	active = false;
     text.setString(buttonText);

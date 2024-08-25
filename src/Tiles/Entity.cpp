@@ -79,13 +79,13 @@ void EntityHandler::UpdateVATexCoords(chunk::ChunkHandler& handler)
             continue;
         }
 
-        for (int i = 0; i < data->animations.size(); i++)
+        for (int i = 0; i < data->entities.size(); i++)
         {
             EntityTile& tile = data->entities[i];
 
             const int frameCount = animationCache.getAnimationFrameCount(tile.animation.textureID);
 
-            if (tile.animation.textureID == 0 || frameCount > 1)
+            if (tile.animation.textureID == 0 || frameCount < 1)
             {
                 continue;
             }
