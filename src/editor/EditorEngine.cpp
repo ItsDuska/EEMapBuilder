@@ -506,15 +506,23 @@ void EditorEngine::addEntity(sf::Vector2i& position, sf::Vector2i& offset, const
 	);
 
 	auto& chunkHandler = editorHandler->getChunkHandler();
-
 	std::vector<EntityTile>& tiles = chunkHandler.getEditorSideData(positions.chunkPosition.x, positions.chunkPosition.y)->entities;
-
 
 	bool updated = false;
 
 	for (EntityTile& tile : tiles) {
 		if (tile.animation.positionInChunk == inChunk)
 		{
+			if (tile.animation.positionInChunk == inChunk)
+			{
+				// Hassu hassu, joka vois vähentää muistin käyttöö. REMOVE jos ei toimi
+				if (guiIndex == 0 && tiles.size() > 1)
+				{
+					tile = tiles.back();
+					break;
+				}
+			}
+
 			tile.animation.textureID = guiIndex;
 			updated = true;
 			break;
@@ -555,13 +563,6 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 	//action.textureIndexCurrent = guiIndex;
 	//action.solidModeCurrent = isSolid;
 
-	if (guiIndex == 0)
-	{
-		currentTexCoord.x = 0;
-		currentTexCoord.y = 0;
-	}
-
-
 	sf::Vector2<std::uint8_t> inChunk(
 		static_cast<std::uint8_t>(positions.positionInChunk.x),
 		static_cast<std::uint8_t>(positions.positionInChunk.y)
@@ -574,9 +575,17 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 
 	bool updated = false;
 
-	for (AnimationTile& tile : tiles) {
+	for (AnimationTile& tile : tiles)
+	{
 		if (tile.positionInChunk == inChunk)
 		{
+			// Hassu hassu, joka vois vähentää muistin käyttöö. REMOVE jos ei toimi
+			if (guiIndex == 0 && tiles.size() > 1)
+			{
+				tile = tiles.back();
+				break;
+			}
+
 			tile.textureID = guiIndex;
 			updated = true;
 			break;
@@ -593,6 +602,13 @@ void EditorEngine::addAnimatedBlock(sf::Vector2i& position, sf::Vector2i& offset
 		newTile.elapsedFrames = 0;
 		tiles.push_back(newTile);
 	}
+
+	if (guiIndex == 0)
+	{
+		currentTexCoord.x = 0;
+		currentTexCoord.y = 0;
+	}
+
 
 	editorHandler->getAnimationHandler().constructTileBuffer(chunkHandler);
 	lastPosition = positions.positionInWorld;
@@ -683,6 +699,16 @@ void EditorEngine::addLayeredBlock(sf::Vector2i& position, sf::Vector2i& offset,
 	for (LayeredStaticTile& tile : tiles) {
 		if (tile.positionInChunk == inChunk)
 		{
+			if (tile.positionInChunk == inChunk)
+			{
+				// Hassu hassu, joka vois vähentää muistin käyttöö. REMOVE jos ei toimi
+				if (guiIndex == 0 && tiles.size() > 1)
+				{
+					tile = tiles.back();
+					break;
+				}
+			}
+
 			tile.textureID = guiIndex;
 			updated = true;
 			break;
