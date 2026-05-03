@@ -1,39 +1,38 @@
 #pragma once
-#include "EditorEngine.h"
+// #include "EditorEngine.h"
+#include "editor/ui/GridRenderer.hh"
+#include "rendering/gpu/SDLContext.hh"
+#include <SDL3/SDL_events.h>
+#include <string>
 #include <vector>
 
 constexpr int MAX_TABS = 9;
 
-class EditorCore
-{
+class EditorCore {
 public:
-	EditorCore(sf::Vector2f& windowSize);
-	~EditorCore();
-	void update();
-	void draw(sf::RenderWindow& window);
-	void events(sf::Event& sfEvent);
-	void resetButtonInfo();
+  EditorCore(Vec2 &windowSize, gpu::GPUContext *context);
+  ~EditorCore();
+  void update();
+  void draw(SDL_GPURenderPass *renderpass);
+  void events(SDL_Event &windowEvent);
+  void resetButtonInfo();
 
 private:
-	void createLines(sf::Vector2f& windowSize);
+  Vec2i cells;
+  Vec2 tileSize;
 
-private:
-	sf::Vector2i cells;
-	sf::Vector2f tileSize;
+  // EditorEngine engine;
+  // EventInfo info;
 
-	EditorEngine engine;
-	EventInfo info;
-	
-	std::string fileName;
-	
+  std::string fileName;
 
-	//TEMP CONFIGS 
-	// change these to their own congif file.
-	//int tabCount;
-	int tabTextureAmount[MAX_TABS];
+  // TEMP CONFIGS
+  //  change these to their own congif file.
+  // int tabCount;
+  int tabTextureAmount[MAX_TABS];
 
-	sf::VertexBuffer lines;
-	const char* extensionName = ".chunk";
-	const std::string path = "data/maps/";
+  const char *extensionName = ".chunk";
+  const std::string path = "data/maps/";
 
+  ui::GridRenderer gridRenderer;
 };

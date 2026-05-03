@@ -1,31 +1,28 @@
 #pragma once
+#include "core/types/Vector.hh"
 #include <stack>
-#include <SFML/System/Vector2.hpp>
 
-
-struct Action
-{
-    sf::Vector2i mousePosition;
-    sf::Vector2i offset;
-    uint16_t textureIndexOld;
-    uint16_t textureIndexCurrent;
-    bool solidModeOld;
-    bool solidModeCurrent;
+struct Action {
+  Vec2i mousePosition;
+  Vec2i offset;
+  uint16_t textureIndexOld;
+  uint16_t textureIndexCurrent;
+  bool solidModeOld;
+  bool solidModeCurrent;
 };
 
-
-class UndoStack
-{
+class UndoStack {
 public:
-    UndoStack(size_t capacity);
+  UndoStack(size_t capacity);
 
-    void addAction(const Action& action);
-    bool undo(Action& action);
-    bool redo(Action& action);
+  void addAction(const Action &action);
+  bool undo(Action &action);
+  bool redo(Action &action);
 
-    void destroyBuffers();
+  void destroyBuffers();
+
 private:
-    std::stack<Action> undoStack;
-    std::stack<Action> redoStack;
-    size_t capacity;
+  std::stack<Action> undoStack;
+  std::stack<Action> redoStack;
+  size_t capacity;
 };

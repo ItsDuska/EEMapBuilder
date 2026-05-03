@@ -1,33 +1,32 @@
 #pragma once
 #include "AnimationCache.h"
-#include <SFML/Graphics/VertexArray.hpp>
-#include <SFML/Graphics/Texture.hpp>
+#include "rendering/gpu/Buffer.hh"
+#include <SDL3/SDL_gpu.h>
+// #include <SFML/Graphics/VertexArray.hpp>
+// #include <SFML/Graphics/Texture.hpp>
 
-namespace chunk
-{
-    class ChunkHandler;
+namespace chunk {
+class ChunkHandler;
 }
 
-class BaseAnimationHandler
-{
+class BaseAnimationHandler {
 public:
-    BaseAnimationHandler(std::string& animationFileName, sf::Vector2f& spritePixelSize);
-    //void resetAnimationRandomness(chunk::ChunkHandler& handler);
+  BaseAnimationHandler(std::string &animationFileName, Vec2 &spritePixelSize);
+  // void resetAnimationRandomness(chunk::ChunkHandler& handler);
 
-    void render(sf::RenderTarget& window);
+  void render(SDL_GPURenderPass *renderpass);
 
-    virtual void constructTileBuffer(chunk::ChunkHandler& handler) = 0;
-    virtual void UpdateVATexCoords(chunk::ChunkHandler& handler) = 0;
+  virtual void constructTileBuffer(chunk::ChunkHandler &handler) = 0;
+  virtual void UpdateVATexCoords(chunk::ChunkHandler &handler) = 0;
 
-    sf::Texture& getTexture();
-    sf::Vector2i& getSpriteSheetSizeInTiles();
+  sf::Texture &getTexture();
+  Vec2i &getSpriteSheetSizeInTiles();
 
-    AnimationCache& getAnimationCache();
+  AnimationCache &getAnimationCache();
 
 protected:
-    AnimationCache animationCache;
-    sf::VertexArray vaTiles;
-    sf::Texture texture;
-    sf::Vector2i spriteSheetSizeInTiles;
+  AnimationCache animationCache;
+  gpu::Buffer vertexBuffer;
+  // sf::Texture texture;
+  Vec2i spriteSheetSizeInTiles;
 };
-

@@ -1,20 +1,16 @@
 #pragma once
 #include <cstdint>
-#include <SFML/Graphics/Vertex.hpp>
 
-namespace chunk
-{
-	void addQuadVertices(sf::Vertex* quad,
-		const sf::Vector2i& position,
-		const sf::Vector2i& texCoord,
-		const sf::Vector2f& tileSize,
-		const sf::Vector2f& textureSize,
-		const bool isSolid
-	);
+#include "rendering/gpu/Vertex.hh"
 
-	bool isBitSet(uint32_t number, int n);
+namespace chunk {
+void addQuadVertices(gpu::Vertex *quad, const Vec2i &position,
+                     const Vec2i &texCoord, const Vec2 &tileSize,
+                     const Vec2 &textureSize, const bool isSolid);
 
-	void setBit(uint32_t& number, int n);
+bool isBitSet(uint32_t number, int n);
 
-	void clearBit(uint32_t& number, int n);
-}
+void setBit(uint32_t &number, int n);
+
+void clearBit(uint32_t &number, int n);
+} // namespace chunk
